@@ -239,6 +239,7 @@ Enhances code blocks with one-click copy, fold view, and code formatting operati
 ### right_outline
 
 Injects an independent outline directory view on the right side of the editing area, addressing native Typora's limitation of not displaying both the [File Tree] and [Document Outline] simultaneously.
+![Typora on macOS showing the file tree on the left and the heading outline on the right](assets/macos/right-outline.jpg)
 
 ### commander
 
@@ -377,6 +378,9 @@ Provides an image-free (text-first) rendering mode.
 ### blur
 
 Focus management optimization: Only the currently active and focused node area remains clearly rendered; surrounding inactive areas automatically apply a Gaussian blur effect to minimize visual interference.
+| Blur mode off | Blur mode on |
+| --- | --- |
+| ![Blur mode off](assets/macos/blur-off.jpg) | ![Blur mode on, with the current block in focus](assets/macos/blur-on.jpg) |
 
 ### myopic_defocus
 

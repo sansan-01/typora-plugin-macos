@@ -240,6 +240,7 @@ yay -S typora-free-with-plugin
 ### right_outline
 
 在编辑区域右侧注入独立的大纲目录视图，解决原生 Typora 侧边栏无法同时显示【文件树】与【文档大纲】的限制。
+![Mac 版 Typora 同时显示左侧文件树与右侧标题大纲](assets/macos/right-outline.jpg)
 
 ### commander
 
@@ -378,6 +379,9 @@ Markdown 规范分析器。检测偏离最佳实践规范的语法并提供自�
 ### blur
 
 焦点管理优化：仅当前活跃且聚焦的节点区域保持清晰渲染，周围非活动区域自动应用高斯模糊效果以屏蔽视觉干扰。
+| 关闭模糊模式 | 开启模糊模式 |
+| --- | --- |
+| ![关闭模糊模式](assets/macos/blur-off.jpg) | ![开启模糊模式，当前段落清晰](assets/macos/blur-on.jpg) |
 
 ### myopic_defocus
 
