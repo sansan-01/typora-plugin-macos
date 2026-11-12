@@ -248,7 +248,9 @@ yay -S typora-free-with-plugin
 
 ### command_palette
 
-实现类似 VS Code 的全局命令面板（快捷键：`Ctrl+Shift+P`）。
+按 `⌘⇧J`（macOS）或 `Ctrl+Shift+P`（Windows/Linux）打开命令面板，搜索并运行插件命令。
+
+![在 Mac 版 Typora 的命令面板搜索 Markmap](assets/macos/command-palette.jpg)
 
 ### right_click_menu
 
@@ -365,6 +367,10 @@ Markdown 规范分析器。检测偏离最佳实践规范的语法并提供自�
 <td width="50%" align="center"><a id="callouts"><b>Callouts</b></a></td>
 </tr>
 </table>
+
+下面是在 Mac 版 Typora 正文中渲染的 Markmap 示例，代码块设置了 `maxWidth: 150`。
+
+![Mac 版 Typora 正文中的 Markmap 思维导图](assets/macos/markmap-inline.jpg)
 
 ## 视图与主题
 

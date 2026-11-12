@@ -247,7 +247,9 @@ Provides an embedded lightweight command-line environment for executing custom S
 
 ### command_palette
 
-Implements a global command palette analogous to VS Code (Shortcut: `Ctrl+Shift+P`).
+Open the command palette with `⌘⇧J` on macOS or `Ctrl+Shift+P` on Windows/Linux to search and run plugin commands.
+
+![Searching for Markmap in the Typora command palette on macOS](assets/macos/command-palette.jpg)
 
 ### right_click_menu
 
@@ -364,6 +366,10 @@ Provides a document security module based on standard cryptographic algorithms, 
 <td width="50%" align="center"><a id="callouts"><b>Callouts</b></a></td>
 </tr>
 </table>
+
+This Markmap example was rendered inside a Typora document on macOS with `maxWidth: 150` in the code block.
+
+![An inline Markmap mind map in Typora on macOS](assets/macos/markmap-inline.jpg)
 
 ## View & Theme
 
