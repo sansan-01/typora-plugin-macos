@@ -1,3 +1,19 @@
+/* Markmap measures labels in a temporary HTML container. Keep its
+   measurements independent of editor rules that stretch div elements. */
+.typora-plugin-macos body .markmap-container > .markmap-foreign-testing-max {
+  display: inline-block !important;
+  box-sizing: content-box;
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: var(--markmap-max-width, none) !important;
+}
+
+.typora-plugin-macos body .markmap-container > .markmap-foreign-testing-max > div {
+  box-sizing: content-box;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
 /* Restrict native appearance tokens to plugin controls. Typora owns the document. */
 .typora-plugin-macos .plugin-preferences-mask,
 .typora-plugin-macos .plugin-command-palette-overlay,
