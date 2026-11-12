@@ -8,7 +8,7 @@ English | [简体中文](README-cn.md)
     <a href="https://github.com/sansan-01/typora-plugin-macos/releases">Releases</a> ·
     <a href="https://github.com/sansan-01/typora-plugin-macos/issues">Issues</a> ·
     <a href="https://github.com/sansan-01/typora-plugin-macos/stargazers">Stars</a> ·
-    <a href="https://github.com/sansan-01/typora-plugin-macos/archive/refs/heads/macos-maintained.zip">Source ZIP</a>
+    <a href="https://github.com/sansan-01/typora-plugin-macos/releases/latest/download/typora-plugin-macos.zip">Download macOS package</a>
   </p>
 </div>
 
@@ -22,9 +22,7 @@ Thanks also to bfyes for the macOS compatibility work and to Carbon for the them
 
 Tested on **Apple silicon with Typora 1.14.15**. You need Python 3, the Xcode Command Line Tools, and Node.js 22.20 or later. An existing Visual Studio Code installation can supply the runtime instead. Other Typora versions and Intel Macs remain unverified.
 
-There is no published release yet. Install from the source ZIP.
-
-1. Download and extract [this repository's source ZIP](https://github.com/sansan-01/typora-plugin-macos/archive/refs/heads/macos-maintained.zip).
+1. Download and extract the [macOS package](https://github.com/sansan-01/typora-plugin-macos/releases/latest/download/typora-plugin-macos.zip).
 2. Quit Typora. In Terminal, open the extracted project directory and run the command below.
 3. Open Typora as usual from the Dock or Finder. Right-click in the editor and check that the plugin groups appear.
 

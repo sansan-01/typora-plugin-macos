@@ -8,7 +8,7 @@
     <a href="https://github.com/sansan-01/typora-plugin-macos/releases">Releases</a> ·
     <a href="https://github.com/sansan-01/typora-plugin-macos/issues">Issues</a> ·
     <a href="https://github.com/sansan-01/typora-plugin-macos/stargazers">Stars</a> ·
-    <a href="https://github.com/sansan-01/typora-plugin-macos/archive/refs/heads/macos-maintained.zip">下载源码 ZIP</a>
+    <a href="https://github.com/sansan-01/typora-plugin-macos/releases/latest/download/typora-plugin-macos.zip">下载 macOS 安装包</a>
   </p>
 </div>
 
@@ -22,9 +22,7 @@
 
 实机验证环境为 **Apple 芯片 Mac、Typora 1.14.15**。安装需要 Python 3、Xcode 命令行工具，以及 Node.js 22.20 或更高版本，也可使用已安装的 Visual Studio Code 提供的运行环境。其他 Typora 版本和 Intel Mac 仍待验证。
 
-本仓库目前尚无正式 Release，安装请使用源码 ZIP。
-
-1. 下载 [本仓库的源码 ZIP](https://github.com/sansan-01/typora-plugin-macos/archive/refs/heads/macos-maintained.zip) 并解压。
+1. 下载 [macOS 安装包](https://github.com/sansan-01/typora-plugin-macos/releases/latest/download/typora-plugin-macos.zip) 并解压。
 2. 正常退出 Typora。在终端进入解压后的项目目录，运行下面的命令。
 3. 从 Dock 或访达打开原来的 Typora，在正文右键确认出现插件分组。
 
