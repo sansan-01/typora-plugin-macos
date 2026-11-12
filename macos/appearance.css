@@ -14,6 +14,26 @@
   min-width: 0 !important;
 }
 
+/* Follow Typora's left sidebar without covering its outline and search controls. */
+.typora-plugin-macos #plugin-window-tab {
+  left: 0;
+  right: 0;
+  width: auto;
+  transition: left .4s ease;
+}
+
+.typora-plugin-macos body.pin-outline #plugin-window-tab {
+  left: var(--sidebar-width, 270px);
+}
+
+.typora-plugin-macos body.pin-outline #plugin-window-tab .tab-bar {
+  width: 100%;
+}
+
+.typora-plugin-macos body.no-animation #plugin-window-tab {
+  transition: none;
+}
+
 /* Restrict native appearance tokens to plugin controls. Typora owns the document. */
 .typora-plugin-macos .plugin-preferences-mask,
 .typora-plugin-macos .plugin-command-palette-overlay,
