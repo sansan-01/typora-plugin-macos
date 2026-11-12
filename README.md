@@ -6,15 +6,17 @@ English | [简体中文](README-cn.md)
   <p>Maintained by <a href="https://github.com/sansan-01">sansan-01</a></p>
 </div>
 
+## Acknowledgements
+
+Thank you to obgnail and the upstream contributors for creating Typora Plugin. This repository is maintained by sansan-01 and adapts that project for macOS. See [obgnail/typora_plugin](https://github.com/obgnail/typora_plugin) for the original project.
+
+Thanks also to [bfyes](https://github.com/bfyes/Typora-plugin-on-Mac) for the macOS compatibility work and to the [Carbon contributors](https://github.com/carbon-app/carbon) for the theme palettes.
+
 ## macOS
 
 [Installation guide](macos/README.md) · [Feature verification table](macos/Typora%20Mac%20功能验收表.md)
 
 ![Typora’s native macOS context menu with the four plugin groups](assets/macos/native-context-menu.jpg)
-
-### Credits
-
-This macOS edition builds on [Typora Plugin by obgnail and its contributors](https://github.com/obgnail/typora_plugin). Thanks to [bfyes](https://github.com/bfyes/Typora-plugin-on-Mac) for the macOS compatibility work and to the [Carbon contributors](https://github.com/carbon-app/carbon) for the theme palettes.
 
 ## Plugin List
 
@@ -457,7 +459,7 @@ For detailed platform support lists and configuration guidelines, please refer t
 - **Is macOS supported?** This edition has been tested with Typora 1.14.15 on Apple silicon. See the [macOS installation guide](macos/README.md).
 - **Other technical questions or discussions?** Please visit the [AI Wiki](https://deepwiki.com/obgnail/typora_plugin) for documentation or join the community discussions.
 
-## Acknowledgements
+## Third-party projects and licenses
 
 - **GPL Licensed**: [PlantUML](https://plantuml.com/) | [Refractify Myopic Defocus](https://chromewebstore.google.com/detail/refractify-myopic-defocus/dpnfdlnkgojjihdmgmacnmheflkojijm?hl=en)
 - **BSD Licensed**: [Vega-Lite](https://github.com/vega/vega-lite)

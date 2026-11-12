@@ -7,15 +7,17 @@
 </div>
 
 
+## 致谢
+
+感谢 obgnail 和上游贡献者开发 Typora Plugin。本仓库由 sansan-01 在该项目基础上修改，适配 macOS。原项目见 [obgnail/typora_plugin](https://github.com/obgnail/typora_plugin)。
+
+也感谢 [bfyes](https://github.com/bfyes/Typora-plugin-on-Mac) 的 macOS 兼容工作，以及 [Carbon 项目贡献者](https://github.com/carbon-app/carbon) 提供的主题配色。
+
 ## macOS
 
 [安装说明](macos/README.md) · [功能验收表](macos/Typora%20Mac%20功能验收表.md)
 
 ![Typora 原生右键菜单与四组插件](assets/macos/native-context-menu.jpg)
-
-### 致谢
-
-本 macOS 版基于 [obgnail 和上游贡献者开发的 Typora Plugin](https://github.com/obgnail/typora_plugin)。感谢 [bfyes](https://github.com/bfyes/Typora-plugin-on-Mac) 的 macOS 兼容工作，也感谢 [Carbon 项目贡献者](https://github.com/carbon-app/carbon) 提供主题配色。
 
 ## 插件列表
 
@@ -459,7 +461,7 @@ Markdown 规范分析器。检测偏离最佳实践规范的语法并提供自�
 - **是否支持 macOS 端的 Typora？** 本版已在 Apple 芯片 Mac 和 Typora 1.14.15 上实测。参见 [macOS 安装说明](macos/README.md)。
 - **有其他技术疑问或需要查阅讨论？** 请移步至 [AI Wiki](https://deepwiki.com/obgnail/typora_plugin) 检索文档，或在社区中发起讨论。
 
-## 致谢
+## 第三方项目与许可证
 
 - **GPL 协议**: [PlantUML](https://plantuml.com/) | [Refractify Myopic Defocus](https://chromewebstore.google.com/detail/refractify-myopic-defocus/dpnfdlnkgojjihdmgmacnmheflkojijm?hl=en)
 - **BSD 协议**: [Vega-Lite](https://github.com/vega/vega-lite)
