@@ -1,0 +1,424 @@
+/**
+ * @fileoverview Custom build script for typora_plugin.
+ * Orchestrates dependency fetching, asset copying, and source bundling via esbuild.
+ * Designed to maintain plugin independence by distributing dependencies locally.
+ */
+const path = require("path")
+const fs = require("fs-extra")
+const fetch = require("node-fetch-commonjs")
+const esbuild = require("esbuild")
+const { HttpsProxyAgent } = require("https-proxy-agent")
+const { minimatch } = require("minimatch")
+const { pipeline } = require("stream")
+const { promisify } = require("util")
+
+const DIR_BUILD = __dirname
+const DIR_DEV = path.dirname(DIR_BUILD)
+const DIR_ROOT = path.dirname(DIR_DEV)
+const REL_DIR_SHARED_VENDOR = "plugin/global/core/lib"
+
+const absPaths = {
+  build: (...args) => path.join(DIR_BUILD, ...args),
+  root: (...args) => path.join(DIR_ROOT, ...args),
+  shared: (...args) => path.join(DIR_ROOT, REL_DIR_SHARED_VENDOR, ...args),
+}
+
+const relPaths = {
+  shared: (...args) => path.join(REL_DIR_SHARED_VENDOR, ...args),
+}
+
+function getNpmRoot(pkgName) {
+  try {
+    return path.dirname(require.resolve(`${pkgName}/package.json`, { paths: [DIR_DEV] }))
+  } catch {
+    const directPath = path.join(DIR_DEV, "node_modules", pkgName)
+    return fs.existsSync(directPath) ? directPath : null
+  }
+}
+
+function resolveCopies(pkgName, outDirAbs, assets) {
+  const pkgRoot = getNpmRoot(pkgName)
+  if (!pkgRoot) {
+    console.warn(`\x1b[33mWarning: Cannot resolve NPM package "${pkgName}". Assets skipped.\x1b[0m`)
+    return []
+  }
+  if (Array.isArray(assets)) {
+    return assets.map(a => ({
+      absSrc: path.join(pkgRoot, a.npmSrc),
+      absDest: path.join(outDirAbs, a.destName),
+      pattern: a.pattern,
+    }))
+  }
+  return Object.entries(assets).map(([destName, val]) => {
+    const isStr = typeof val === "string"
+    return {
+      absSrc: path.join(pkgRoot, isStr ? val : val.npmSrc),
+      absDest: path.join(outDirAbs, destName),
+      pattern: isStr ? undefined : val.pattern,
+    }
+  })
+}
+
+const VENDOR_TYPE = { download: "download", bundle: "bundle", dist: "dist" }
+
+const sharedVendor = {
+  bundle: ({ entryInBuild, outFileName }) => ({
+    type: VENDOR_TYPE.bundle,
+    absEntry: absPaths.build(entryInBuild),
+    absOut: absPaths.shared(outFileName),
+    aliasTarget: relPaths.shared(outFileName),
+  }),
+  download: ({ url, outFileName }) => ({
+    type: VENDOR_TYPE.download,
+    downloads: [{ url, absOut: absPaths.shared(outFileName) }],
+    aliasTarget: relPaths.shared(outFileName),
+  }),
+  copyNpm: ({ aliasTargetFileName, outDirName, pkgName, assets }) => ({
+    type: VENDOR_TYPE.dist,
+    absOut: absPaths.shared(outDirName, aliasTargetFileName),
+    aliasTarget: relPaths.shared(outDirName, aliasTargetFileName),
+    copies: resolveCopies(pkgName, absPaths.shared(outDirName), assets),
+  }),
+}
+
+const pluginVendor = {
+  bundle: ({ entryInBuild, outFilePath, copyNpm, extraPlugins }) => {
+    const absOut = absPaths.root(outFilePath)
+    return {
+      type: VENDOR_TYPE.bundle,
+      absEntry: absPaths.build(entryInBuild),
+      absOut,
+      copies: copyNpm ? resolveCopies(copyNpm.pkgName, path.dirname(absOut), copyNpm.assets) : [],
+      extraPlugins: extraPlugins ?? [],
+    }
+  },
+  download: ({ files }) => ({
+    type: VENDOR_TYPE.download,
+    downloads: Object.entries(files).map(([outFilePath, url]) => ({ absOut: absPaths.root(outFilePath), url })),
+  }),
+  copyNpm: ({ pkgName, files }) => {
+    const pkgRoot = getNpmRoot(pkgName)
+    const copies = []
+    let absOut = ""
+    if (pkgRoot) {
+      for (const [outFilePath, npmSrc] of Object.entries(files)) {
+        const absDest = absPaths.root(outFilePath)
+        if (!absOut) absOut = absDest
+        copies.push({ absSrc: path.join(pkgRoot, npmSrc), absDest })
+      }
+    } else {
+      console.warn(`\x1b[33mWarning: Cannot resolve NPM package "${pkgName}". Assets skipped.\x1b[0m`)
+    }
+    return { type: VENDOR_TYPE.dist, absOut, copies }
+  },
+}
+
+const SHARED_VENDORS_CONFIG = {
+  "js-yaml": sharedVendor.download({ outFileName: "js-yaml.js", url: "https://cdn.jsdelivr.net/npm/js-yaml@latest/dist/js-yaml.min.js" }),
+  "markdown-it": sharedVendor.download({ outFileName: "markdown-it.js", url: "https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js" }),
+  "$markdown-it-plugins": sharedVendor.bundle({ outFileName: "markdown-it-plugins.js", entryInBuild: "markdown-it-plugins.mjs" }),
+  "smol-toml": sharedVendor.bundle({ outFileName: "smol-toml.js", entryInBuild: "smol-toml.mjs" }),
+  "node-fetch-commonjs": sharedVendor.bundle({ outFileName: "node-fetch-commonjs.js", entryInBuild: "node-fetch-commonjs.cjs" }),
+  "https-proxy-agent": sharedVendor.bundle({ outFileName: "https-proxy-agent.js", entryInBuild: "https-proxy-agent.mjs" }),
+  "micromark": sharedVendor.bundle({ outFileName: "micromark.js", entryInBuild: "micromark.mjs" }),
+  "katex": sharedVendor.copyNpm({
+    aliasTargetFileName: "katex.js",
+    outDirName: "katex",
+    pkgName: "katex",
+    assets: {
+      "katex.js": "dist/katex.min.js",
+      "katex.min.css": "dist/katex.min.css",
+      "fonts": { npmSrc: "dist/fonts", pattern: "*.woff2" },
+    },
+  }),
+}
+
+const PLUGIN_VENDORS_CONFIG = {
+  "json-rpc-2.0": pluginVendor.bundle({ entryInBuild: "json-rpc-2.0.mjs", outFilePath: "plugin/remote_control/json-rpc-2.0.min.js" }),
+  "md-padding": pluginVendor.bundle({ entryInBuild: "md-padding.mjs", outFilePath: "plugin/md_padding/md-padding.min.js" }),
+  "aes-ecb": pluginVendor.bundle({ entryInBuild: "aes-ecb.mjs", outFilePath: "plugin/cipher/aes-ecb.min.js" }),
+  "markmap": pluginVendor.bundle({
+    entryInBuild: "markmap.mjs",
+    outFilePath: "plugin/markmap/resource/markmap.min.js",
+    extraPlugins: [patchHighlightLanguages()],
+  }),
+  "marp-core": pluginVendor.bundle({
+    entryInBuild: "marp-core.mjs",
+    outFilePath: "plugin/marp/marp-core.min.js",
+    extraPlugins: [patchMathjaxGlobalDetect(), patchHighlightLanguages()],
+  }),
+  "function-plot": pluginVendor.bundle({ entryInBuild: "function-plot.mjs", outFilePath: "plugin/function_plot/function-plot.min.js" }),
+  "markdownlint": pluginVendor.bundle({ entryInBuild: "markdownlint.mjs", outFilePath: "plugin/markdownlint/markdownlint.min.js" }),
+  "markdownlint-rule-helpers": pluginVendor.bundle({
+    entryInBuild: "markdownlint-rule-helpers.cjs",
+    outFilePath: "plugin/markdownlint/markdownlint-rule-helpers.min.js",
+  }),
+  "calendar": pluginVendor.bundle({
+    entryInBuild: "calendar.cjs",
+    outFilePath: "plugin/calendar/toastui-calendar.min.js",
+    copyNpm: {
+      pkgName: "@toast-ui/calendar",
+      assets: { "toastui-calendar.min.css": "dist/toastui-calendar.min.css" },
+    },
+  }),
+  "abc": pluginVendor.download({ files: { "plugin/abc/abcjs-basic-min.js": "https://raw.githubusercontent.com/paulrosen/abcjs/refs/heads/main/dist/abcjs-basic-min.js" } }),
+  "chart": pluginVendor.download({ files: { "plugin/chart/chart.min.js": "https://cdn.jsdelivr.net/npm/chart.js" } }),
+  "echarts": pluginVendor.download({ files: { "plugin/echarts/echarts.min.js": "https://raw.githubusercontent.com/apache/echarts/refs/heads/master/dist/echarts.min.js" } }),
+  "wavedrom": pluginVendor.download({
+    files: {
+      "plugin/wavedrom/wavedrom.min.js": "https://cdn.jsdelivr.net/npm/wavedrom@latest/wavedrom.unpkg.min.js",
+      "plugin/wavedrom/skins/narrow.js": "https://cdn.jsdelivr.net/npm/wavedrom@latest/skins/narrow.js",
+    },
+  }),
+  "dataTables": pluginVendor.download({
+    files: {
+      "plugin/datatables/resource/js/dataTables.min.js": "https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js",
+      "plugin/datatables/resource/css/dataTables.min.css": "https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css",
+      "plugin/datatables/resource/images/sort_asc.png": "https://cdn.datatables.net/1.10.25/images/sort_asc.png",
+      "plugin/datatables/resource/images/sort_asc_disabled.png": "https://cdn.datatables.net/1.10.25/images/sort_asc_disabled.png",
+      "plugin/datatables/resource/images/sort_both.png": "https://cdn.datatables.net/1.10.25/images/sort_both.png",
+      "plugin/datatables/resource/images/sort_desc.png": "https://cdn.datatables.net/1.10.25/images/sort_desc.png",
+      "plugin/datatables/resource/images/sort_desc_disabled.png": "https://cdn.datatables.net/1.10.25/images/sort_desc_disabled.png",
+    },
+  }),
+}
+
+const ESBUILD_OPTIONS = { bundle: true, minify: true, platform: "node", target: "node12.14", logLevel: "info", sourcemap: false }
+
+async function copyAssets(copies) {
+  if (!copies?.length) return
+  await Promise.all(copies.map(async ({ absSrc, absDest, pattern }) => {
+    const filterFn = async (currSrc) => {
+      if (!pattern) return true
+      return (await fs.stat(currSrc)).isDirectory() ? true : minimatch(path.relative(absSrc, currSrc), pattern, { matchBase: true })
+    }
+    return fs.copy(absSrc, absDest, { overwrite: true, filter: filterFn })
+  }))
+}
+
+async function downloadFile(url, dest) {
+  const env = process.env
+  const proxy = env.http_proxy || env.HTTP_PROXY || env.https_proxy || env.HTTPS_PROXY
+  const agent = proxy ? new HttpsProxyAgent(proxy) : undefined
+  const response = await fetch(url, { agent })
+  if (!response.ok) throw new Error(`Download failed for '${url}' (${response.status})`)
+
+  await fs.ensureDir(path.dirname(dest))
+  await promisify(pipeline)(response.body, fs.createWriteStream(dest))
+}
+
+function createAliasPlugin(registry, currentAbsOutfile) {
+  return {
+    name: "auto-external-alias",
+    setup(build) {
+      const sharedLibs = Object.keys(registry)
+      if (!sharedLibs.length) return
+
+      const regexPattern = sharedLibs.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")
+      build.onResolve({ filter: new RegExp(`^(${regexPattern})$`) }, (args) => {
+        const targetAbsPath = absPaths.root(registry[args.path])
+        if (currentAbsOutfile === targetAbsPath) return null
+
+        let relPath = path.relative(path.dirname(currentAbsOutfile), targetAbsPath).split(path.sep).join("/")
+        return { path: relPath.startsWith(".") ? relPath : `./${relPath}`, external: true }
+      })
+    },
+  }
+}
+
+// Fix: #1203
+// Patch mathjax-full's AllPackages.js: remove the global MathJax detection block so
+// marp-core uses its own bundled MathJax without touching Typora's global MathJax.
+function patchMathjaxGlobalDetect() {
+  return {
+    name: "patch-mathjax-global-detect",
+    setup(build) {
+      build.onLoad({ filter: /[\\/]mathjax-full[\\/]js[\\/]input[\\/]tex[\\/]AllPackages\.js$/ }, async (args) => {
+        let code = fs.readFileSync(args.path, "utf8")
+        const original = code
+        code = code.replace(
+          /if\s*\(typeof MathJax !== 'undefined' && MathJax\.loader\)\s*\{[\s\S]*?\}\s*/,
+          "/* patched by typora_plugin build: removed global MathJax detection to avoid Typora conflict */\n",
+        )
+        if (code === original) {
+          console.warn(`\x1b[33mWarning: AllPackages.js global-detect block not found; mathjax-full may have changed.\x1b[0m`)
+        }
+        return { contents: code, loader: "js" }
+      })
+    },
+  }
+}
+
+const HIGHLIGHT_LANGUAGE_WHITELIST = new Set([
+  "javascript", "typescript", "python", "bash", "shell", "json", "yaml",
+  "css", "scss", "less", "xml", "html", "markdown", "java", "c", "cpp",
+  "csharp", "go", "rust", "sql", "ini", "diff", "dockerfile", "plaintext",
+])
+
+function patchHighlightLanguages(whitelist) {
+  return {
+    name: "patch-highlight-languages",
+    setup(build) {
+      build.onLoad({ filter: /highlight\.js[\\/]lib[\\/]languages[\\/]([\w-]+)\.js$/ }, async (args) => {
+        const langName = args.path.match(/highlight\.js[\\/]lib[\\/]languages[\\/]([\w-]+)\.js$/)?.[1]
+        if (langName && (whitelist || HIGHLIGHT_LANGUAGE_WHITELIST).has(langName)) {
+          return undefined
+        }
+        const stub = `module.exports = function(hljs) { return { case_insensitive: true, contains: [] } }`
+        return { contents: stub, loader: "js" }
+      })
+    },
+  }
+}
+
+const SUB_EXPORT_ALIAS_CONFIG = {
+  "markdown-it-ins": { target: "$markdown-it-plugins", exportName: "ins" },
+  "markdown-it-mark": { target: "$markdown-it-plugins", exportName: "mark" },
+  "markdown-it-sub": { target: "$markdown-it-plugins", exportName: "sub" },
+  "markdown-it-sup": { target: "$markdown-it-plugins", exportName: "sup" },
+  "markdown-it-front-matter": { target: "$markdown-it-plugins", exportName: "frontMatter" },
+  "@iktakahiro/markdown-it-katex": { target: "$markdown-it-plugins", exportName: "katex" },
+}
+
+function createSubExportAliasPlugin(config, aliasRegistry, currentAbsOutfile) {
+  const specifiers = Object.keys(config)
+  if (!specifiers.length) {
+    return { name: "sub-export-alias-noop", setup: () => undefined }
+  }
+
+  const namespace = "sub-export-alias-ns"
+  const sharedAbsPaths = new Set(
+    Object.values(config).map(({ target }) => absPaths.root(aliasRegistry[target])),
+  )
+
+  return {
+    name: "sub-export-alias",
+    setup(build) {
+      const regexPattern = specifiers.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")
+
+      build.onResolve({ filter: new RegExp(`^(${regexPattern})$`) }, (args) => {
+        const { target } = config[args.path]
+        const targetAbsPath = absPaths.root(aliasRegistry[target])
+        if (currentAbsOutfile === targetAbsPath) return null
+        return { path: args.path, namespace }
+      })
+
+      build.onLoad({ filter: /.*/, namespace }, (args) => {
+        const { target, exportName } = config[args.path]
+        const targetRel = aliasRegistry[target]
+        if (!targetRel) {
+          console.warn(`\x1b[33mWarning: sub-export-alias target "${target}" not found in aliasRegistry for "${args.path}".\x1b[0m`)
+          return { contents: `module.exports = undefined`, loader: "js" }
+        }
+        const targetAbsPath = absPaths.root(targetRel)
+        let relPath = path.relative(path.dirname(currentAbsOutfile), targetAbsPath).split(path.sep).join("/")
+        relPath = relPath.startsWith(".") ? relPath : `./${relPath}`
+        return {
+          contents: `module.exports = require(${JSON.stringify(relPath)}).${exportName}`,
+          loader: "js",
+          resolveDir: path.dirname(currentAbsOutfile),
+        }
+      })
+
+      build.onResolve({ filter: /\.js$/ }, (args) => {
+        if (args.namespace !== "file" && args.namespace !== namespace) return null
+        const resolvedAbs = path.resolve(args.resolveDir, args.path)
+        if (sharedAbsPaths.has(resolvedAbs)) {
+          return { path: args.path, external: true }
+        }
+        return null
+      })
+    },
+  }
+}
+
+const vendorExecutors = {
+  [VENDOR_TYPE.download]: async (vendor, { analyze }) => {
+    await Promise.all(vendor.downloads.map(async task => {
+      await downloadFile(task.url, task.absOut)
+      if (analyze) console.log(`\n\x1b[35m[Downloaded: ${path.basename(task.absOut)}]\x1b[0m`)
+    }))
+  },
+  [VENDOR_TYPE.bundle]: async (vendor, { analyze, aliasRegistry }) => {
+    await copyAssets(vendor.copies)
+    const result = await esbuild.build({
+      ...ESBUILD_OPTIONS,
+      entryPoints: [vendor.absEntry],
+      outfile: vendor.absOut,
+      plugins: [
+        createAliasPlugin(aliasRegistry, vendor.absOut),
+        createSubExportAliasPlugin(SUB_EXPORT_ALIAS_CONFIG, aliasRegistry, vendor.absOut),
+        ...(vendor.extraPlugins ?? []),
+      ],
+      metafile: analyze,
+    })
+    if (analyze && result.metafile) {
+      console.log(`\n\x1b[35m[Analysis: ${path.basename(vendor.absOut)}]\x1b[0m`)
+      console.log(await esbuild.analyzeMetafile(result.metafile))
+    }
+  },
+  [VENDOR_TYPE.dist]: async (vendor, { analyze }) => {
+    await copyAssets(vendor.copies)
+    if (analyze) console.log(`\n\x1b[35m[Copied Assets Only: ${path.basename(vendor.absOut)}]\x1b[0m`)
+  },
+}
+
+async function build() {
+  const options = { analyze: false, types: new Set(), targets: [] }
+
+  const cliArgs = process.argv.slice(2)
+  for (const arg of cliArgs) {
+    if (arg === "--analyze") {
+      options.analyze = true
+    } else if (arg.startsWith("--type=")) {
+      arg.split("=")[1].split(",").forEach(t => {
+        const normalized = (t === "copyNpm" || t === "copy") ? "dist" : t.trim()
+        if (normalized) options.types.add(normalized)
+      })
+    } else if (!arg.startsWith("--")) {
+      options.targets.push(arg.trim())
+    }
+  }
+
+  const allVendors = {}
+  const aliasRegistry = {}
+  Object.entries(SHARED_VENDORS_CONFIG).forEach(([name, cfg]) => {
+    allVendors[name] = { ...cfg, name }
+    aliasRegistry[name] = cfg.aliasTarget
+  })
+  Object.entries(PLUGIN_VENDORS_CONFIG).forEach(([name, cfg]) => {
+    allVendors[name] = { ...cfg, name }
+  })
+
+  let vendorsToRun = options.targets.length === 0
+    ? Object.values(allVendors)
+    : options.targets.map(name => {
+      if (!allVendors[name]) console.warn(`\x1b[33mWarning: Vendor "${name}" not found. Skipping.\x1b[0m`)
+      return allVendors[name]
+    }).filter(Boolean)
+
+  if (options.types.size > 0) {
+    vendorsToRun = vendorsToRun.filter(vendor => options.types.has(vendor.type))
+  }
+
+  if (!vendorsToRun.length) {
+    console.error("\x1b[31mError: No valid vendors matched the specified criteria.\x1b[0m")
+    process.exit(1)
+  }
+
+  const targetMsg = options.targets.length ? options.targets.join(", ") : "ALL"
+  const typeMsg = options.types.size ? Array.from(options.types).join(", ") : "ALL"
+  console.log(`\x1b[36mTargets: ${targetMsg} | Types: ${typeMsg} (${vendorsToRun.length} vendors)\x1b[0m`)
+  console.time("Build Time")
+
+  try {
+    await Promise.all(vendorsToRun.map(vendor => vendorExecutors[vendor.type](vendor, { analyze: options.analyze, aliasRegistry })))
+    console.timeEnd("Build Time")
+    console.log("\x1b[32m✔ Build success!\x1b[0m")
+  } catch (err) {
+    console.error("\x1b[31m✘ Build failed:\x1b[0m", err)
+    process.exit(1)
+  }
+}
+
+build()

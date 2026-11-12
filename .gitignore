@@ -1,0 +1,11 @@
+.DS_Store
+/.idea
+/.vscode
+/temp
+/develop/node_modules
+/plugin/VERSION.json
+/plugin/global/user_styles/*.css
+
+/.macos-runtime/
+
+__pycache__/
