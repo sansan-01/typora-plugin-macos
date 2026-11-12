@@ -126,5 +126,5 @@
 
 ## 核对材料
 
-- [项目上游清单](../README-cn.md#插件列表)和[Windows 与 macOS 对照及实测记录](Windows与macOS功能对照.md)。
+- [项目上游清单](https://github.com/obgnail/typora_plugin/blob/master/README-cn.md#插件列表)和[Windows 与 macOS 对照及实测记录](Windows与macOS功能对照.md)。
 - [复测用 Markdown 样例](验证样例.md)。本机日志及生成的 HTML、PDF 和 Carbon 图片用于核对结果。
