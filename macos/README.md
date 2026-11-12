@@ -10,7 +10,11 @@ python3 -B macos/install.py
 
 用原来的 Typora 图标打开应用。正文普通右键会在同一张原生菜单中显示 Typora 的剪切、拷贝、粘贴等命令和插件分组。按住 **⌥** 右键可只看 Typora 自带命令，**⌘⇧M** 可单独打开插件分组。右下角齿轮打开插件设置，**⌘⇧J** 打开命令面板。
 
+![Typora 原生右键菜单与四组插件](../assets/macos/native-context-menu.jpg)
+
 在代码块里右键打开「Carbon」。可选择 PNG 或 SVG，图片保存到 `~/Library/Application Support/Typora Plugin/user_space/carbon-temp`。「主题」提供 Carbon 官方的 29 套配色，「字体」读取本机已安装的字体。选项会用于后续导出。SVG 引用字体名称，PNG 则保存渲染后的外观。
+
+![代码块原生右键的 Carbon 子菜单，提供 PNG、SVG、主题和字体](../assets/macos/carbon-menu.jpg)
 
 Windows 版与当前 Mac 版的差异和实测范围见 [67 项功能对照](./Windows与macOS功能对照.md)。
 

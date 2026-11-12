@@ -19,11 +19,15 @@
 
 [安装说明](macos/README.md) · [功能验收表](macos/Typora%20Mac%20功能验收表.md)
 
+![Typora 原生右键菜单与四组插件](assets/macos/native-context-menu.jpg)
+
 ### 致谢
 
 本 macOS 版基于 [obgnail 和上游贡献者开发的 Typora Plugin](https://github.com/obgnail/typora_plugin)。感谢 [bfyes](https://github.com/bfyes/Typora-plugin-on-Mac) 的 macOS 兼容工作，也感谢 [Carbon 项目贡献者](https://github.com/carbon-app/carbon) 提供主题配色。
 
 ## 插件列表
+
+下方功能说明中的其他示例图沿用上游项目的图片。
 
 | 插件：导航与管理                            | 功能                               | 默认启用 |
 | :------------------------------------------ | :--------------------------------- | :------- |
@@ -255,7 +259,7 @@ yay -S typora-free-with-plugin
 
 增强代码块功能，提供一键复制、折叠视图及代码格式化操作。
 
-![fence_enhance](./assets/fence_enhance.png)
+![Mac 版代码块工具和原生 Carbon 子菜单](assets/macos/carbon-menu.jpg)
 
 ### right_outline
 
