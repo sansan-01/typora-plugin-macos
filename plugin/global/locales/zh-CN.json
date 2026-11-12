@@ -364,7 +364,7 @@
     "tooltip.shell": "执行环境",
     "tooltip.execute": "执行 (Ctrl+Enter)",
     "tooltip.copy": "复制输出结果",
-    "placeholder.textarea": "在此输入脚本命令...\n\n- 按 Ctrl + Enter 执行\n- 按 Esc 隐藏面板",
+    "placeholder.textarea": "在此输入脚本命令...\n\n- 按 {{runShortcut}} 执行\n- 按 Esc 隐藏面板",
     "$option.QUICK_RUN_DISPLAY.echo": "立即弹窗并回显输出",
     "$option.QUICK_RUN_DISPLAY.always": "执行结束后弹窗并显示输出",
     "$option.QUICK_RUN_DISPLAY.error": "仅在错误时弹窗并显示输出",
@@ -500,6 +500,7 @@
     "$label.PAGE_LENGTH": "单页数据量"
   },
   "markmap": {
+    "error.outline": "无法从标题生成思维导图。",
     "pluginName": "Markmap",
     "act.toggle_toc": "思维导图弹窗",
     "act.draw_fence_outline": "插入 Markmap: 大纲",
@@ -661,6 +662,16 @@
     "$hintDetail.counterStyles": "可用的样式：d（阿拉伯数字，默认），dlz（带前导零的数字），lr（小写罗马数字），ur（大写罗马数字），la（小写字母），ua（大写字母），lg（小写希腊字母），hs（天干），eb（地支），cjk（中文数字），di（实心圆点），ci（空心圆圈），sq（实心方块）。"
   },
   "fence_enhance": {
+    "carbon.defaultTheme": "默认主题",
+    "carbon.theme": "主题",
+    "carbon.fontPicker": "字体…",
+    "carbon.font": "系统字体",
+    "carbon.fontError": "无法读取本机字体。",
+    "carbon.copy": "复制代码",
+    "carbon.empty": "代码块为空。",
+    "carbon.size": "代码太长，无法生成一张图片。",
+    "carbon.saved": "代码图片已保存。",
+    "carbon.error": "代码图片导出失败。",
     "pluginName": "代码块增强",
     "act.toggle_state_fold": "折叠按钮",
     "act.toggle_state_copy": "复制按钮",
@@ -1054,6 +1065,7 @@
     "$tooltip.modifierKeyExample": "举例：选中 Ctrl，则 Ctrl+RClick 触发"
   },
   "preferences": {
+    "macLocalUninstall": "退出 Mac 适配版后，移除工作目录下的 .macos-runtime 即可卸载副本。",
     "pluginName": "插件配置",
     "$label.OBJECT_SETTINGS_FORMAT": "对象类型的数据格式",
     "$label.COLLAPSIBLE_BOX": "标题可折叠",
@@ -1121,6 +1133,8 @@
     "$tooltip.viewArticleUploaderReadme": "安装上传服务"
   },
   "ripgrep": {
+    "error.executable": "找不到 Ripgrep。请安装 ripgrep 或 Visual Studio Code。",
+    "error.folder": "请先打开文件夹或保存当前文档，再搜索。",
     "pluginName": "Ripgrep",
     "$label.BACKSPACE_TO_HIDE": "清空并按退格键隐藏窗口"
   },
@@ -1196,6 +1210,10 @@
     "$tooltip.ALLOWED_METHODS": "配置允许被远程调用的插件方法白名单"
   },
   "updater": {
+    "macUpdate.current": "已经是上游最新版本。",
+    "macUpdate.staged": "更新已准备好。退出 Typora 后重新运行 macOS 安装脚本。",
+    "macUpdate.incompatible": "上游版本与当前 Mac 适配版不兼容，未应用更新。",
+    "macUpdate.conflict": "上游修改与本地修改冲突，未应用更新。",
     "pluginName": "升级插件",
     "hintHeader.PROXY": "网络代理",
     "hintDetail.PROXY": "若无法直连 GitHub，可在此指定 HTTP/HTTPS 代理服务器。留空则不使用代理。",

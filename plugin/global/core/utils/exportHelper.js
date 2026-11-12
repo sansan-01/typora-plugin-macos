@@ -19,7 +19,11 @@ class ExportHelper {
   registerNative = (name, beforeExportToNative, afterExportToNative, afterExportToNativeFinally) => this.nativeHelpers.set(name, { beforeExportToNative, afterExportToNative, afterExportToNativeFinally })
   unregisterNative = name => this.nativeHelpers.delete(name)
 
-  check = args => ["html", "html-plain", "pdf", "image"].includes(args?.[0]?.type)
+  check = ([options] = []) => {
+    if (["html", "html-plain", "pdf", "image"].includes(options?.type)) return true
+    // The macOS bridge calls exportToHTML without an explicit type, including for print.
+    return Boolean(window.__typoraPluginMacState && !options?.type)
+  }
 
   processExportHTML = () => {
     const before = (...args) => {

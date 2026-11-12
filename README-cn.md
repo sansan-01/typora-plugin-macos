@@ -15,6 +15,10 @@
 </div>
 
 
+## macOS
+
+[安装说明](macos/README.md) · [功能验收表](macos/Typora%20Mac%20功能验收表.md)
+
 ## 插件列表
 
 | 插件：导航与管理                            | 功能                               | 默认启用 |

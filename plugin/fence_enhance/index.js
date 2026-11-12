@@ -8,6 +8,7 @@ const traverseAllFences = (visitor) => {
 
 class FenceEnhancePlugin extends BasePlugin {
   buttonHelper = new ButtonHelper(this)
+  carbonPreferences = this.utils.getStorage("fence_enhance.carbon")
 
   style = () => `
 #write .CodeMirror-scroll { cursor: default; }
@@ -32,6 +33,15 @@ ${this.config.HIGHLIGHT_ON_FOCUS ? `.md-focus .CodeMirror-activeline { backgroun
 
   process = async () => {
     this.utils.settings.autoSave(this)
+    if (window.__typoraPluginMacState) {
+      this.utils.contextMenu.register(window, ev => {
+        if (ev.altKey || ev.shiftKey || ev.ctrlKey || ev.metaKey || this.utils.getPlugin("right_click_menu")?.macMenu) return
+        const fence = ev.target.closest?.("#write .md-fences[cid]")
+        if (!fence) return
+        window.bridge?.callSync?.("contextMenu.setItems", [])
+        return [{ label: this.i18n.t("carbon.copy"), action: () => this.copyFence(fence) }]
+      }, true)
+    }
 
     if (this.config.ENABLE_BUTTON) this.buttonHelper.process()
     if (this.config.ENABLE_HOTKEY) new HotkeyHelper(this).process()
@@ -49,6 +59,51 @@ ${this.config.HIGHLIGHT_ON_FOCUS ? `.md-focus .CodeMirror-activeline { backgroun
   registerButton = (btn) => this.buttonHelper?.registerButton(btn) // { enable, action, hint, iconClassName, listener, extraFunc, initFunc }
   unregisterButton = (action) => this.buttonHelper?.unregisterButton(action)
   copyFence = (fence) => this.buttonHelper?.copyCode(fence.getAttribute("cid"), fence.querySelector(`.enhance-btn[action="copy"]`))
+  getCodeContextItems = fence => {
+    const settings = this.carbonPreferences.get() || {}
+    const themes = require("./carbon-themes.json")
+    const formats = ["png", "svg"].map(format => ({
+      label: format.toUpperCase(),
+      action: () => this.exportCarbon(fence, format),
+    }))
+    const themeItems = [{ id: "", name: this.i18n.t("carbon.defaultTheme") }, ...themes].map(theme => ({
+      label: theme.name,
+      checked: (settings.theme || "") === theme.id,
+      action: () => this.carbonPreferences.set({ ...(this.carbonPreferences.get() || {}), theme: theme.id }),
+    }))
+    return [
+      { label: this.i18n.t("carbon.copy"), action: () => this.copyFence(fence) },
+      { label: "Carbon", children: [
+        ...formats,
+        { label: this.i18n.t("carbon.theme"), children: themeItems },
+        { label: this.i18n.t("carbon.fontPicker"), action: this.chooseCarbonFont },
+      ] },
+    ]
+  }
+
+  chooseCarbonFont = async () => {
+    try {
+      const fonts = [...new Set(await JSBridge.invoke("plugin.listMacFonts"))]
+        .filter(font => typeof font === "string" && font.trim())
+        .sort((a, b) => a.localeCompare(b))
+      if (!fonts.length) throw new Error("No system fonts available")
+      const current = this.carbonPreferences.get()?.font
+      const font = fonts.includes(current) ? current : fonts.includes("Menlo") ? "Menlo" : fonts[0]
+      const { response, data } = await this.utils.formDialog.modal({
+        title: this.i18n.t("carbon.fontPicker"),
+        schema: ({ Controls }) => [
+          Controls.Select("font").Label(this.i18n.t("carbon.font")).Options(fonts),
+        ],
+        data: { font },
+      })
+      if (response === 1 && fonts.includes(data.font)) {
+        this.carbonPreferences.set({ ...(this.carbonPreferences.get() || {}), font: data.font })
+      }
+    } catch (error) {
+      console.error("Unable to select Carbon font", error)
+      this.utils.notification.show(this.i18n.t("carbon.fontError"), "error")
+    }
+  }
   indentFence = (fence) => this.buttonHelper?.indentCode(fence.getAttribute("cid"), fence.querySelector(`.enhance-btn[action="indent"]`))
   foldFence = (fence) => this.buttonHelper?.foldCode(fence.getAttribute("cid"), true, fence.querySelector(`.enhance-btn[action="fold"]`))
   expandFence = (fence) => this.buttonHelper?.expandFence(fence)
@@ -63,6 +118,40 @@ ${this.config.HIGHLIGHT_ON_FOCUS ? `.md-focus .CodeMirror-activeline { backgroun
   ])
 
   call = (action, meta) => this.buttonHelper?.actionCall(action, meta)
+
+  exportCarbon = async (fence, format) => {
+    if (!fence?.isConnected) return
+    const cid = fence.getAttribute("cid")
+    const cm = File.editor.fences.queue[cid] || File.editor.fences.addCodeBlock(cid)
+    const code = cm?.getValue()
+    if (typeof code !== "string" || !code.trim()) {
+      this.utils.notification.show(this.i18n.t("carbon.empty"), "info")
+      return
+    }
+    try {
+      const renderCarbon = require("./carbon.js")
+      const language = fence.getAttribute("lang") || ""
+      const settings = this.carbonPreferences.get() || {}
+      const theme = require("./carbon-themes.json").find(theme => theme.id === settings.theme)
+      const image = renderCarbon(code, language, cm, format, { theme, font: settings.font })
+      if (!image) {
+        this.utils.notification.show(this.i18n.t("carbon.size"), "warning")
+        return
+      }
+      const { Path, FsExtra } = this.utils.Package
+      const directory = this.utils.getUserSpaceFile("carbon-temp")
+      await FsExtra.ensureDir(directory)
+      const id = require("crypto").randomBytes(6).toString("hex")
+      const filePath = Path.join(directory, `code-${Date.now()}-${id}.${format}`)
+      const saved = await this.utils.writeFile(filePath, format === "png" ? Buffer.from(image, "base64") : image)
+      if (!saved) return
+      this.utils.notification.show(this.i18n.t("carbon.saved"), "success")
+      this.utils.showInFinder(filePath)
+    } catch (error) {
+      console.error("Carbon export failed", error)
+      this.utils.notification.show(this.i18n.t("carbon.error"), "error")
+    }
+  }
 }
 
 class ButtonHelper {

@@ -8,6 +8,16 @@ class RemoteControlPlugin extends BasePlugin {
     config: "config",
   }
 
+  prepare = async () => {
+    if (!window.__typoraPluginMacState) return
+    if (this.config.AUTH_TOKEN && this.config.AUTH_TOKEN !== "secret-token") return
+    const { randomBytes } = require("crypto")
+    const token = randomBytes(32).toString("hex")
+    const saved = await this.utils.settings.save(this.fixedName, { AUTH_TOKEN: token })
+    if (!saved) throw new Error("Could not save the local automation token")
+    this.config.AUTH_TOKEN = token
+  }
+
   process = () => {
     this._fixConfig()
 

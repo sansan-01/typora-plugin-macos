@@ -1,6 +1,14 @@
 const normalizeLocale = (locale) => {
   if (locale === "auto") {
     locale = window._options.userLocale
+    if (window.__typoraPluginMacState) {
+      const available = [locale, window._options.appLocale, window._options.locale, navigator.language]
+      const chosen = available.find(value => typeof value === "string" && value && value !== "Base") || ""
+      if (/^zh(?:-|_)/i.test(chosen)) {
+        return /(?:Hant|TW|HK|MO)(?:$|[-_])/i.test(chosen) ? "zh-TW" : "zh-CN"
+      }
+      locale = chosen
+    }
   }
   switch (locale) {
     case "zh-CN":

@@ -14,6 +14,10 @@ English | [简体中文](https://github.com/obgnail/typora_plugin/blob/master/RE
   </p>
 </div>
 
+## macOS
+
+[Installation guide](macos/README.md) · [Feature verification table](macos/Typora%20Mac%20功能验收表.md)
+
 ## Plugin List
 
 | Plugin: Navigation & Management             | Feature                    | Default |

@@ -106,7 +106,12 @@ function createMarkmap(...args) {
 
 async function load(utils) {
   const transformer = new Transformer(getPlugins(utils))
-  await loadResources(utils, transformer)
+  if (window.__typoraPluginMacState) {
+    // Text headings can render while optional highlighting and math assets load.
+    loadResources(utils, transformer).catch(error => console.warn("Markmap assets failed", error))
+  } else {
+    await loadResources(utils, transformer)
+  }
   return { markmap, transformer, assignOptions, createMarkmap, version: transformerVersions["markmap-lib"] }
 }
 

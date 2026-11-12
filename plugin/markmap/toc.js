@@ -188,10 +188,16 @@ class TOCMarkmap {
     if (this.utils.isShown(this.entities.panel)) {
       this.close()
     } else {
-      this.utils.show(this.entities.panel)
-      this.panelCtl.initRect()
-      await this.plugin.lazyLoad()
-      this.draw()
+      try {
+        this.utils.show(this.entities.panel)
+        this.panelCtl.initRect()
+        await this.plugin.lazyLoad()
+        if (this.utils.isShown(this.entities.panel)) this.draw()
+      } catch (error) {
+        console.error("Markmap outline failed", error)
+        this.close()
+        this.utils.notification.show(this.i18n.t("error.outline"), "error")
+      }
     }
   }
 
@@ -271,6 +277,7 @@ class TOCMarkmap {
       this.mm.setData(modifiedRoot, options)
     } else {
       this.mm = this.Lib.createMarkmap(this.entities.svg, options, modifiedRoot)
+      if (window.__typoraPluginMacState) requestAnimationFrame(() => this.fit())
     }
   }
 

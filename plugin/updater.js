@@ -10,6 +10,9 @@ class UpdaterPlugin extends BasePlugin {
   }
 
   call = async (action, meta) => {
+    if (window.__typoraPluginMacState) {
+      return this.macUpdate()
+    }
     if (this.config.PROXY) {
       await this.manualUpdate()
       return
@@ -29,9 +32,42 @@ class UpdaterPlugin extends BasePlugin {
 
   _withLock = this.utils.singleflight(fn => fn(), () => "update")
   silentUpdate = proxy => this._withLock(async () => {
+    if (window.__typoraPluginMacState) {
+      try {
+        await JSBridge.invoke("plugin.stageMacUpdate", await this.getProxy(proxy))
+      } catch (error) {
+        console.warn("Unable to stage the Mac plugin update", error)
+      }
+      return
+    }
     console.log("Start silent update...")
     const updater = await this.getUpdater(proxy)
     await updater.run()
+  })
+
+  macUpdate = () => this._withLock(async () => {
+    const close = this.utils.notification.show(this.i18n.t("update.pleaseWait"), "info", 0)
+    let result, detail
+    try {
+      result = await JSBridge.invoke("plugin.stageMacUpdate", await this.getProxy())
+      detail = [result.revision, ...(result.files || [])].join("\n")
+    } catch (error) {
+      detail = error.message
+    } finally {
+      close()
+    }
+    const message = result && ["current", "staged", "incompatible", "conflict"].includes(result.status)
+      ? this.i18n.t("macUpdate." + result.status)
+      : this.i18n.t("update.failed")
+    const type = result && ["current", "staged"].includes(result.status) ? "success" : "warning"
+    this.utils.notification.show(message, type, 10000)
+    if (type !== "success") {
+      await this.utils.formDialog.modal({
+        title: message,
+        schema: ({ Controls }) => [Controls.Code("detail")],
+        data: { detail },
+      })
+    }
   })
   manualUpdate = proxy => this._withLock(async () => {
     const timeout = Math.max(this.config.NETWORK_REQUEST_TIMEOUT, 30 * 1000)

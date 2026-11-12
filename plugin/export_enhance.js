@@ -35,7 +35,8 @@ class ExportEnhancePlugin extends BasePlugin {
           }
           imagePath = imageMap[src]
         } else {
-          imagePath = this.utils.Package.Path.resolve(dirname, decodeURIComponent(src))
+          const uri = src.startsWith("file://") ? new URL(src).pathname : src
+          imagePath = this.utils.Package.Path.resolve(dirname, decodeURIComponent(uri))
         }
         const bin = await this.utils.Package.FsExtra.readFile(imagePath)
         const base64 = this.utils.convertImageToBase64(bin)

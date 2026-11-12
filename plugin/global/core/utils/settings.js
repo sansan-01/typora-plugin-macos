@@ -16,6 +16,9 @@ class Settings {
   }
 
   get userTomlHomePath() {
+    if (window.__typoraPluginMacState) {
+      return this.utils.Package.Path.join(window.__typoraPluginMacState, this.USER_TOML)
+    }
     return this.utils.Package.Path.join(this.utils.getHomeDir(), ".config", "typora_plugin", this.USER_TOML)
   }
 
@@ -53,7 +56,11 @@ class Settings {
     const paths = [this.defaultTomlPath, this.userTomlOriginPath, this.userTomlHomePath]
     try {
       const contents = await this.utils.readFiles(paths)
-      return contents.map(c => c ? this.utils.readToml(c) : {})
+      const objects = contents.map(c => c ? this.utils.readToml(c) : {})
+      if (window.__typoraPluginMacState && objects[0].command_palette?.HOTKEY === "ctrl+shift+p") {
+        objects[0].command_palette.HOTKEY = "ctrl+shift+j"
+      }
+      return objects
     } catch (e) {
       const prefix = "Invalid TOML document: "
       await this.utils.showMessageBox({

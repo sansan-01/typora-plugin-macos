@@ -216,6 +216,10 @@ module.exports = (plugin) => {
       }
     },
     uninstallPlugin: async () => {
+      if (window.__typoraPluginMacState) {
+        utils.notification.show(i18n.t("macLocalUninstall"), "info")
+        return
+      }
       const uninstall = async () => {
         const remove = `<script src="./plugin/index.js" defer="defer"></script>`
         const windowHTML = utils.joinPluginPath("./window.html")

@@ -23,27 +23,28 @@ class ContextMenu {
     })
   }
 
-  register = (el, spec) => {
+  register = (el, spec, capture = false) => {
     if (!el || this.providers.has(el)) return
-    this.providers.set(el, spec)
-    el.addEventListener("contextmenu", this._onContextMenu)
+    this.providers.set(el, { spec, capture })
+    el.addEventListener("contextmenu", this._onContextMenu, capture)
   }
 
   unregister = (el) => {
     if (!el || !this.providers.has(el)) return
-    el.removeEventListener("contextmenu", this._onContextMenu)
+    el.removeEventListener("contextmenu", this._onContextMenu, this.providers.get(el).capture)
     this.providers.delete(el)
   }
 
   _onContextMenu = (ev) => {
-    const spec = this.providers.get(ev.currentTarget)
-    if (!spec) return
+    const provider = this.providers.get(ev.currentTarget)
+    if (!provider) return
 
-    const menuItems = this._resolveItems(spec, ev)
+    const menuItems = this._resolveItems(provider.spec, ev)
     if (!menuItems || !Array.isArray(menuItems) || menuItems.length === 0) return
 
     ev.preventDefault()
-    ev.stopPropagation()
+    if (provider.capture) ev.stopImmediatePropagation()
+    else ev.stopPropagation()
 
     if (this._menuEl.classList.contains("show")) this._hideMenu()
     this._renderAndShow(menuItems, ev)

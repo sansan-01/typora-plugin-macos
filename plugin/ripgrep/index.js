@@ -134,8 +134,22 @@ class RipgrepPlugin extends BasePlugin {
   }
 
   _ripgrep = (rawInput, { onData, onErr, onClose }) => {
-    const rgPath = reqnode("vscode-ripgrep").rgPath.replace("node_modules.asar", "node_modules")
-    const options = { cwd: File.getMountFolder(), stdio: ["ignore", "pipe", "pipe"], env: { rg: rgPath } }
+    const { rgPath: executable } = reqnode("vscode-ripgrep")
+    if (!executable) {
+      onErr(this.i18n.t("error.executable"))
+      onClose(1)
+      return
+    }
+    const isMac = !!window.__typoraPluginMacState
+    const rgPath = isMac ? executable : executable.replace("node_modules.asar", "node_modules")
+    const cwd = File.getMountFolder() || (isMac && this.utils.getFilePath() ? this.utils.getCurrentDirPath() : undefined)
+    if (isMac && !cwd) {
+      onErr(this.i18n.t("error.folder"))
+      onClose(1)
+      return
+    }
+    const options = { cwd, stdio: ["ignore", "pipe", "pipe"], env: { rg: rgPath } }
+    if (isMac) options.shell = false
     this._rg.run(rgPath, rawInput, options, { onData, onErr, onClose })
   }
 

@@ -682,7 +682,9 @@ class utils {
   static getCurrentDirPath = () => PATH.dirname(this.getFilePath())
   static joinPluginPath = (...paths) => PATH.join(this.getDirname(), ...paths)
   static resolvePluginPath = (...paths) => PATH.resolve(this.getDirname(), ...paths)
-  static getUserSpaceFile = (file = "") => this.joinPluginPath("./plugin/global/user_space", file)
+  static getUserSpaceFile = (file = "") => window.__typoraPluginMacState
+    ? PATH.join(window.__typoraPluginMacState, "user_space", file)
+    : this.joinPluginPath("./plugin/global/user_space", file)
   static require = (...paths) => require(this.joinPluginPath(...paths))
 
   static readFiles = async files => Promise.all(files.map(file => FS_EXTRA.readFile(file, "utf-8").catch(() => undefined)))

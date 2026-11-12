@@ -1,0 +1,118 @@
+/* Restrict native appearance tokens to plugin controls. Typora owns the document. */
+.typora-plugin-macos .plugin-preferences-mask,
+.typora-plugin-macos .plugin-command-palette-overlay,
+.typora-plugin-macos fast-window,
+.typora-plugin-macos fast-dialog,
+.typora-plugin-macos .plugin-mac-context-menu {
+  color-scheme: light dark;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  accent-color: AccentColor;
+}
+
+.typora-plugin-macos body .plugin-preferences-mask {
+  --pref-bg-dialog: Canvas;
+  --pref-bg-sidebar: color-mix(in srgb, CanvasText 4%, Canvas);
+  --pref-bg-search: Field;
+  --pref-bg-hover: color-mix(in srgb, CanvasText 6%, Canvas);
+  --pref-bg-active: color-mix(in srgb, AccentColor 16%, Canvas);
+  --pref-text-main: CanvasText;
+  --pref-text-sub: color-mix(in srgb, CanvasText 72%, Canvas);
+  --pref-text-placeholder: GrayText;
+  --pref-border: color-mix(in srgb, CanvasText 16%, Canvas);
+  --pref-primary: AccentColor;
+  --pref-primary-hover: AccentColor;
+  --pref-primary-text: LinkText;
+  --pref-shadow-focus: color-mix(in srgb, AccentColor 30%, transparent);
+}
+
+.typora-plugin-macos body .plugin-preferences-form {
+  --ff-bg-solid: Canvas;
+  --ff-bg-elevated: Canvas;
+}
+
+.typora-plugin-macos fast-window {
+  --window-bg-main: Canvas;
+  --window-text-main: CanvasText;
+  --window-text-sub: color-mix(in srgb, CanvasText 72%, Canvas);
+  --window-border: color-mix(in srgb, CanvasText 16%, Canvas);
+  --window-bg-hover: color-mix(in srgb, CanvasText 6%, Canvas);
+}
+
+.typora-plugin-macos fast-dialog {
+  --dialog-bg-main: Canvas;
+  --dialog-bg-hover: color-mix(in srgb, CanvasText 6%, Canvas);
+  --dialog-border: color-mix(in srgb, CanvasText 16%, Canvas);
+  --dialog-text-main: CanvasText;
+  --dialog-text-sub: color-mix(in srgb, CanvasText 72%, Canvas);
+  --dialog-primary: AccentColor;
+  --dialog-primary-hover: AccentColor;
+  --dialog-shadow-focus: color-mix(in srgb, AccentColor 30%, transparent);
+}
+
+.typora-plugin-macos body .plugin-command-palette-overlay {
+  --bg-dialog: Canvas;
+  --bg-hover: color-mix(in srgb, CanvasText 6%, Canvas);
+  --bg-active: color-mix(in srgb, AccentColor 16%, Canvas);
+  --border: color-mix(in srgb, CanvasText 16%, Canvas);
+  --border-strong: color-mix(in srgb, CanvasText 24%, Canvas);
+  --text-main: CanvasText;
+  --text-sub: color-mix(in srgb, CanvasText 72%, Canvas);
+  --text-placeholder: GrayText;
+  --primary: AccentColor;
+}
+
+.typora-plugin-macos .plugin-mac-context-menu {
+  position: fixed;
+  z-index: 11000;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 168px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  overflow: auto;
+  padding: 5px;
+  background: Canvas;
+  color: CanvasText;
+  border: 1px solid color-mix(in srgb, CanvasText 18%, Canvas);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .19);
+  font-size: 13px;
+  user-select: none;
+}
+
+.plugin-mac-context-menu > [role="menuitem"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 25px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.plugin-mac-context-menu > [aria-haspopup="menu"]::after {
+  content: "›";
+  margin-left: 18px;
+}
+
+.plugin-mac-context-menu > [role="menuitem"]:not([aria-disabled="true"]):is(:hover, :focus, [aria-expanded="true"]) {
+  outline: none;
+  color: HighlightText;
+  background: Highlight;
+}
+
+.plugin-mac-context-menu > [aria-disabled="true"] { opacity: .45; }
+.plugin-mac-context-menu > [role="separator"] {
+  margin: 4px 6px;
+  border-top: 1px solid color-mix(in srgb, CanvasText 16%, Canvas);
+}
+.plugin-mac-context-shortcut { margin-left: 18px; opacity: .8; }
+
+@media (prefers-reduced-motion: reduce) {
+  .typora-plugin-macos body .plugin-preferences-mask,
+  .typora-plugin-macos body .plugin-preferences-dialog,
+  .typora-plugin-macos body .plugin-command-palette-overlay:not(.plugin-common-hidden) .plugin-command-palette-panel {
+    animation: none;
+  }
+}

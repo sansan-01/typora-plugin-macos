@@ -817,14 +817,34 @@ class WindowTabPlugin extends BasePlugin {
   _handleDrag = () => new TabDragManager(this).init()
 
   _handleRename = () => {
-    reqnode("electron").ipcRenderer.on("didRename", (sender, { oldPath, newPath }) => {
+    const rename = ({ oldPath, newPath, isDir }) => {
+      if (!oldPath || !newPath || oldPath === newPath) return
       try {
-        const isDir = this.utils.Package.FsExtra.statSync(newPath).isDirectory()
-        this.tab.rename(oldPath, newPath, isDir)
+        const directory = isDir ?? this.utils.Package.FsExtra.statSync(newPath).isDirectory()
+        this.tab.rename(oldPath, newPath, directory)
+        return directory
       } catch (err) {
         console.error("Rename failed to stat file", err)
       }
-    })
+    }
+    if (window.__typoraPluginMacState) {
+      const channel = new BroadcastChannel("plugin:window-tab:rename")
+      channel.onmessage = ({ data }) => rename(data)
+      window.addEventListener("pagehide", () => channel.close(), { once: true })
+      const syncRename = change => {
+        const isDir = rename(change)
+        if (isDir !== undefined) channel.postMessage({ ...change, isDir })
+      }
+      this.utils.decorator.afterCall(() => JSBridge, "invoke", (_, method, event, change) => {
+        if (method === "app.sendEvent" && event === "didRename" && change) syncRename(change)
+      })
+      window.addEventListener("typora-plugin-mac-path-changed", ({ detail }) => {
+        // Save As also changes the active path, while leaving the original file in place.
+        if (!this.utils.Package.FsExtra.existsSync(detail.oldPath)) syncRename(detail)
+      })
+    } else {
+      reqnode("electron").ipcRenderer.on("didRename", (_, change) => rename(change))
+    }
   }
 
   _handleWheel = () => {

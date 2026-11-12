@@ -364,7 +364,7 @@
     "tooltip.shell": "Shell",
     "tooltip.execute": "Execute (Ctrl+Enter)",
     "tooltip.copy": "Copy Output",
-    "placeholder.textarea": "Type your script here...\n\n- Press Ctrl + Enter to execute\n- Press Esc to hide",
+    "placeholder.textarea": "Type your script here...\n\n- Press {{runShortcut}} to execute\n- Press Esc to hide",
     "$option.QUICK_RUN_DISPLAY.echo": "Echo Output Immediately",
     "$option.QUICK_RUN_DISPLAY.always": "Show Output After Execution",
     "$option.QUICK_RUN_DISPLAY.error": "Show Output Only on Error",
@@ -500,6 +500,7 @@
     "$label.PAGE_LENGTH": "Page Length"
   },
   "markmap": {
+    "error.outline": "Could not generate the mind map from headings.",
     "pluginName": "Markmap",
     "act.toggle_toc": "MindMap Popup",
     "act.draw_fence_outline": "Insert Markmap (Outline)",
@@ -661,6 +662,16 @@
     "$hintDetail.counterStyles": "d (Decimal, default), dlz (Decimal Leading Zero), lr (Lower Roman), ur (Upper Roman), la (Lower Alpha), ua (Upper Alpha), lg (Lower Greek), hs (Heavenly Stem), eb (Earthly Branch), cjk (CJK Ideographs), di (Disc), ci (Circle), sq (Square)."
   },
   "fence_enhance": {
+    "carbon.defaultTheme": "Default",
+    "carbon.theme": "Theme",
+    "carbon.fontPicker": "Font…",
+    "carbon.font": "System Font",
+    "carbon.fontError": "Could not read installed fonts.",
+    "carbon.copy": "Copy Code",
+    "carbon.empty": "The code block is empty.",
+    "carbon.size": "The code is too long for a single image.",
+    "carbon.saved": "Code image saved.",
+    "carbon.error": "Could not export the code image.",
     "pluginName": "Enhance Code Blocks",
     "act.toggle_state_fold": "Fold Button",
     "act.toggle_state_copy": "Copy Button",
@@ -1054,6 +1065,7 @@
     "$tooltip.modifierKeyExample": "E.g., 'Ctrl' to use Ctrl+RClick to trigger"
   },
   "preferences": {
+    "macLocalUninstall": "Quit the Mac edition and remove .macos-runtime from the project folder to uninstall the copy.",
     "pluginName": "Preferences",
     "$label.OBJECT_SETTINGS_FORMAT": "Data Format",
     "$label.COLLAPSIBLE_BOX": "Collapsible Categories",
@@ -1121,6 +1133,8 @@
     "$tooltip.viewArticleUploaderReadme": "Install Upload Server"
   },
   "ripgrep": {
+    "error.executable": "Ripgrep was not found. Install ripgrep or Visual Studio Code.",
+    "error.folder": "Open a folder or save the current document before searching.",
     "pluginName": "Ripgrep Search",
     "$label.BACKSPACE_TO_HIDE": "Hide Window on Empty and Backspace"
   },
@@ -1196,6 +1210,10 @@
     "$tooltip.ALLOWED_METHODS": "Configure whitelist of plugin methods allowed for remote invocation"
   },
   "updater": {
+    "macUpdate.current": "You already have the latest upstream version.",
+    "macUpdate.staged": "Update ready. Quit Typora and run the macOS installer again.",
+    "macUpdate.incompatible": "The upstream version is incompatible with this Mac edition. No update was applied.",
+    "macUpdate.conflict": "Upstream changes conflict with local changes. No update was applied.",
     "pluginName": "Updater",
     "hintHeader.PROXY": "Network Proxy",
     "hintDetail.PROXY": "Specify an HTTP/HTTPS proxy if you cannot connect to GitHub directly. Leave blank to bypass.",

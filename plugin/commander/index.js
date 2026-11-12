@@ -116,7 +116,9 @@ class CommanderPlugin extends BasePlugin {
               <div class="plugin-commander-commit fa fa-play" ty-hint="${this.i18n.t("tooltip.execute")}"></div>
             </div>
           </div>
-          <textarea class="plugin-commander-textarea" rows="8" placeholder="${this.i18n.t("placeholder.textarea")}"></textarea>
+          <textarea class="plugin-commander-textarea" rows="8" placeholder="${this.i18n.t("placeholder.textarea", {
+            runShortcut: window.__typoraPluginMacState ? "⌘ + Enter" : "Ctrl + Enter",
+          })}"></textarea>
         </div>
         <div class="plugin-commander-output">
           <pre tabindex="0"></pre>
