@@ -18,6 +18,10 @@ English | [简体中文](https://github.com/obgnail/typora_plugin/blob/master/RE
 
 [Installation guide](macos/README.md) · [Feature verification table](macos/Typora%20Mac%20功能验收表.md)
 
+### Credits
+
+This macOS edition builds on [Typora Plugin by obgnail and its contributors](https://github.com/obgnail/typora_plugin). Thanks to [bfyes](https://github.com/bfyes/Typora-plugin-on-Mac) for the macOS compatibility work and to the [Carbon contributors](https://github.com/carbon-app/carbon) for the theme palettes.
+
 ## Plugin List
 
 | Plugin: Navigation & Management             | Feature                    | Default |

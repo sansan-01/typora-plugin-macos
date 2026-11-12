@@ -19,6 +19,10 @@
 
 [安装说明](macos/README.md) · [功能验收表](macos/Typora%20Mac%20功能验收表.md)
 
+### 致谢
+
+本 macOS 版基于 [obgnail 和上游贡献者开发的 Typora Plugin](https://github.com/obgnail/typora_plugin)。感谢 [bfyes](https://github.com/bfyes/Typora-plugin-on-Mac) 的 macOS 兼容工作，也感谢 [Carbon 项目贡献者](https://github.com/carbon-app/carbon) 提供主题配色。
+
 ## 插件列表
 
 | 插件：导航与管理                            | 功能                               | 默认启用 |
