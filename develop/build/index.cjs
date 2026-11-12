@@ -147,7 +147,18 @@ const PLUGIN_VENDORS_CONFIG = {
     outFilePath: "plugin/marp/marp-core.min.js",
     extraPlugins: [patchMathjaxGlobalDetect(), patchHighlightLanguages()],
   }),
-  "function-plot": pluginVendor.bundle({ entryInBuild: "function-plot.mjs", outFilePath: "plugin/function_plot/function-plot.min.js" }),
+  "function-plot": pluginVendor.bundle({
+    entryInBuild: "function-plot.mjs",
+    outFilePath: "plugin/function_plot/function-plot.min.js",
+    copyNpm: { pkgName: "events", assets: { "LICENSE.events": "LICENSE" } },
+    // Typora's macOS WebView has no Node.js events module.
+    extraPlugins: [{
+      name: "bundle-events",
+      setup(build) {
+        build.onResolve({ filter: /^events$/ }, () => ({ path: require.resolve("events/") }))
+      },
+    }],
+  }),
   "markdownlint": pluginVendor.bundle({ entryInBuild: "markdownlint.mjs", outFilePath: "plugin/markdownlint/markdownlint.min.js" }),
   "markdownlint-rule-helpers": pluginVendor.bundle({
     entryInBuild: "markdownlint-rule-helpers.cjs",
