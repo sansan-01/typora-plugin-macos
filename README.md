@@ -1,17 +1,9 @@
-English | [简体中文](https://github.com/obgnail/typora_plugin/blob/master/README-cn.md)
+English | [简体中文](README-cn.md)
 
 <div align="center">
-  <h1>Typora Plugin</h1>
-  <img src="assets/typora_plugin.png" alt="typora_plugin" width="400">
-  <p align="center">
-    <a href="https://github.com/obgnail/typora_plugin/releases/latest"><img src="https://img.shields.io/github/v/release/obgnail/typora_plugin"></a>
-    <a href="https://github.com/obgnail/typora_plugin/stargazers"><img src="https://img.shields.io/github/stars/obgnail/typora_plugin?style=flat"></a>
-    <a href="https://github.com/obgnail/typora_plugin/issues"><img src="https://img.shields.io/github/issues-closed/obgnail/typora_plugin.svg"></a>
-    <a href="https://github.com/obgnail/typora_plugin/tree/master/plugin"><img src="https://img.shields.io/badge/implementation-Native-greenbule"></a>
-    <a href="https://github.com/obgnail/typora_plugin?tab=readme-ov-file#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95%E4%B8%80%E8%87%AA%E5%8A%A8"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-0085a1"></a>
-    <a href="https://github.com/obgnail/typora_plugin/blob/master/LICENSE"><img src="https://img.shields.io/github/license/obgnail/typora_plugin"></a>
-    <a href="https://deepwiki.com/obgnail/typora_plugin"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
-  </p>
+  <a href="https://github.com/sansan-01"><img src="assets/macos/maintainer-avatar.png" alt="sansan-01" width="88" height="88"></a>
+  <h1>Typora Plugin for macOS</h1>
+  <p>Maintained by <a href="https://github.com/sansan-01">sansan-01</a></p>
 </div>
 
 ## macOS
@@ -26,7 +18,7 @@ This macOS edition builds on [Typora Plugin by obgnail and its contributors](htt
 
 ## Plugin List
 
-The other screenshots in the feature guide below are from the upstream project.
+See the [upstream feature guide](https://github.com/obgnail/typora_plugin#plugin-list) for the original project documentation.
 
 | Plugin: Navigation & Management             | Feature                    | Default |
 | :------------------------------------------ | :------------------------- | :------ |
@@ -130,8 +122,6 @@ Refer to the [Installation Tutorial](https://github.com/obgnail/typora_plugin/is
 
 5. **Verify installation status:** Restart Typora, right-click within the main editor area to open the context menu. If plugin-related options are displayed, the underlying logic injection is successful.
 
-![install](./assets/install.gif)
-
 ## How to Use: Archlinux Platform
 
 ```sh
@@ -162,19 +152,13 @@ The plugin system provides seven interactive entry points to accommodate differe
 
 Provides multi-document tab management.
 
-![window_tab](./assets/window_tab.gif)
-
 ### search_multi
 
 Supports high-precision file retrieval through multi-condition combinations using query syntax.
 
-![search_mutli](./assets/search_mutli.gif)
-
 ### auto_number
 
 Automatically generates sequence numbers for document elements including chapter headers, tables, images, and code blocks.
-
-![auto_number](./assets/auto_number.png)
 
 > Unlike pure CSS rendering schemes, this plugin intercepts core rendering functions, effectively resolving the technical limitation where sidebar directory numbering is lost during PDF export.
 
@@ -218,8 +202,6 @@ Encapsulates and integrates the native `ripgrep` retrieval engine within Typora,
 
 Supports expanding and collapsing all text paragraphs nested under `h1` through `h6` header nodes.
 
-![collapse_paragraph](./assets/collapse_paragraph.gif)
-
 ### collapse_list
 
 Supports expanding and collapsing unordered lists, ordered lists, and task list nodes.
@@ -236,13 +218,9 @@ Supports expanding and collapsing long image.
 
 Normalizes typography experiences: Automatically inserts whitespace (Pangu spacing) between Chinese and English, and between Chinese and numeric boundaries.
 
-![md_padding](./assets/md_padding.gif)
-
 ### slash_commands
 
 Provides a Notion-style slash (`/`) command invocation menu.
-
-![slash_commands](./assets/slash_commands.gif)
 
 ### mouse_gestures
 
@@ -251,8 +229,6 @@ Provides global mouse gesture recognition and operation mapping.
 ### templater
 
 A lightweight document template engine. Supports predefined content architectures for rapid file initialization.
-
-![templater](./assets/templater.gif)
 
 ### fence_enhance
 
@@ -268,13 +244,9 @@ Injects an independent outline directory view on the right side of the editing a
 
 Provides an embedded lightweight command-line environment for executing custom Shell instructions and interactive script operations.
 
-![commander](./assets/commander.png)
-
 ### command_palette
 
 Implements a global command palette analogous to VS Code (Shortcut: `Ctrl+Shift+P`).
-
-![command_palette](./assets/command_palette.png)
 
 ### right_click_menu
 
@@ -293,13 +265,9 @@ Graphical radial menu component. Basic interaction protocol:
 
 Injects advanced interaction features into standard Markdown tables, including data retrieval, real-time filtering, frontend pagination, and multi-column sorting.
 
-![datatables](./assets/datatables.png)
-
 ### resize_table
 
 Dynamically adjust table row height and column width via `Ctrl + Mouse Drag` interaction.
-
-![resize_table](./assets/resize_table.gif)
 
 ### resize_image
 
@@ -333,13 +301,9 @@ Implements auto-pairing closure and cursor rollback for CJK punctuation (e.g., `
 
 Quickly applies custom or preset rich text styles to the currently selected text by encapsulating inline HTML tags.
 
-![text_stylize](./assets/text_stylize.gif)
-
 ### markdownlint
 
 Markdown specification analyzer. Detects syntax patterns deviating from best practices and provides automated remediation.
-
-![markdownlint](./assets/markdownlint.png)
 
 ### resource_manager
 
@@ -367,36 +331,36 @@ Provides a document security module based on standard cryptographic algorithms, 
 
 <table width="100%">
 <tr>
-<td width="33.33%" align="center"><a id="chart"><b>Chart.js</b></a><br><img src="./assets/chart.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="echarts"><b>ECharts</b></a><br><img src="./assets/echarts.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="markmap"><b>Markmap</b></a><br><img src="./assets/markmap.png" width="100%"></td>
+<td width="33.33%" align="center"><a id="chart"><b>Chart.js</b></a><br><img src="assets/macos/chart-export.png" alt="Chart.js chart exported from Typora on Mac" width="100%"></td>
+<td width="33.33%" align="center"><a id="echarts"><b>ECharts</b></a></td>
+<td width="33.33%" align="center"><a id="markmap"><b>Markmap</b></a></td>
 </tr>
 <tr>
-<td width="33.33%" align="center"><a id="vega_lite"><b>Vega-Lite</b></a><br><img src="./assets/vega_lite.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="plantUML"><b>PlantUML</b></a><br><img src="./assets/plantUML.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="drawIO"><b>Draw.io</b></a><br><img src="./assets/drawIO.png" width="100%"></td>
+<td width="33.33%" align="center"><a id="vega_lite"><b>Vega-Lite</b></a></td>
+<td width="33.33%" align="center"><a id="plantUML"><b>PlantUML</b></a></td>
+<td width="33.33%" align="center"><a id="drawIO"><b>Draw.io</b></a></td>
 </tr>
 <tr>
-<td width="33.33%" align="center"><a id="function_plot"><b>Function Plot</b></a><br><img src="./assets/function_plot.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="wavedrom"><b>WaveDrom</b></a><br><img src="./assets/wavedrom.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="abc"><b>ABC</b></a><br><img src="./assets/abcjs.png" width="100%"></td>
+<td width="33.33%" align="center"><a id="function_plot"><b>Function Plot</b></a></td>
+<td width="33.33%" align="center"><a id="wavedrom"><b>WaveDrom</b></a><br><img src="assets/macos/wavedrom.jpg" alt="WaveDrom rendered in Typora on Mac" width="100%"></td>
+<td width="33.33%" align="center"><a id="abc"><b>ABC</b></a></td>
 </tr>
 <tr>
-<td width="33.33%" align="center"><a id="infographic"><b>Infographic</b></a><br><img src="./assets/infographic.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="marp"><b>Marp</b></a><br><img src="./assets/marp.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="calendar"><b>Calendar</b></a><br><img src="./assets/calendar.png" width="100%"></td>
+<td width="33.33%" align="center"><a id="infographic"><b>Infographic</b></a></td>
+<td width="33.33%" align="center"><a id="marp"><b>Marp</b></a></td>
+<td width="33.33%" align="center"><a id="calendar"><b>Calendar</b></a></td>
 </tr>
 <tr>
-<td width="33.33%" align="center"><a id="timeline"><b>Timeline</b></a><br><img src="./assets/timeline.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="kanban"><b>Kanban</b></a><br><img src="./assets/kanban.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="chat"><b>Chat</b></a><br><img src="./assets/chat.png" width="100%"></td>
+<td width="33.33%" align="center"><a id="timeline"><b>Timeline</b></a></td>
+<td width="33.33%" align="center"><a id="kanban"><b>Kanban</b></a></td>
+<td width="33.33%" align="center"><a id="chat"><b>Chat</b></a></td>
 </tr>
 </table>
 
 <table width="100%">
 <tr>
-<td width="50%" align="center"><a id="markmap(TOC)"><b>Markmap (TOC)</b></a><br><img src="./assets/markmap.gif" width="100%"></td>
-<td width="50%" align="center"><a id="callouts"><b>Callouts</b></a><br><img src="./assets/callouts.png" width="100%"></td>
+<td width="50%" align="center"><a id="markmap(TOC)"><b>Markmap (TOC)</b></a></td>
+<td width="50%" align="center"><a id="callouts"><b>Callouts</b></a></td>
 </tr>
 </table>
 
@@ -442,8 +406,6 @@ Forces the retention of Markdown syntax markers (persistent rendering).
 
 Disables the auto-hide callback logic for syntax markers in WYSIWYG mode, ensuring that formatting markers like `**`, `##`, and `_` remain explicitly rendered, functioning exactly as they would in a source code editor.
 
-![static_markers](./assets/static_markers.png)
-
 ### sidebar_enhance
 
 Extends the functional boundaries of the native file sidebar:
@@ -482,7 +444,7 @@ For detailed platform support lists and configuration guidelines, please refer t
 - **How to adjust plugin configurations?** `Right-click menu` -> `Interactive Plugins` -> `Preferences`. **All user preferences are respected**; every plugin and feature can be independently and permanently enabled or disabled.
 - **How to execute a plugin system upgrade?** `Right-click menu` -> `Interactive Plugins` -> `Preferences` -> `Check for Updates`.
 - **How to safely uninstall plugins?** `Right-click menu` -> `Interactive Plugins` -> `Preferences` -> `Uninstall Plugins`.
-- **Is macOS supported?** Due to the lack of a testing environment and Apple hardware, macOS is currently not natively supported.
+- **Is macOS supported?** This edition has been tested with Typora 1.14.15 on Apple silicon. See the [macOS installation guide](macos/README.md).
 - **Other technical questions or discussions?** Please visit the [AI Wiki](https://deepwiki.com/obgnail/typora_plugin) for documentation or join the community discussions.
 
 ## Acknowledgements

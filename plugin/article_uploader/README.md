@@ -1,5 +1,7 @@
 # 自动上传文章插件
 
+配图见[上游插件文档](https://github.com/obgnail/typora_plugin/tree/master/plugin/article_uploader#readme)。
+
 由于CSDN是直接逆向的接口，上传文章大概是2-3s，两个selenium自动化的平台上传时间长一点，20s左右
 
 ### 原因
@@ -56,20 +58,11 @@
 }
 ```
 
-如下图
-
-<img src="https://my-picture-bed1-1321100201.cos.ap-beijing.myqcloud.com/mypictures/image-20240527174651021.png" alt="image-20240527174651021" width=50%/>
-
 1. 如果你是程序开发人员，电脑有node环境，在当前路径下，运行`npm i`即可
 
-   ⚠️ 运行之前先把之前的`node_modules`包的几个依赖给备份一下（如下），下载好再粘回来。使用npm下载依赖会删除原有包
-
-   <img src="https://my-picture-bed1-1321100201.cos.ap-beijing.myqcloud.com/mypictures/image-20240527175003616.png" alt="image-20240527175003616" style="zoom:50%;" />
+   ⚠️ 运行之前先把之前的`node_modules`包的几个依赖给备份一下，下载好再粘回来。使用npm下载依赖会删除原有包
 
 2. 如果你是小白，请下载这个压缩包[Release 自动发布博客依赖 ](https://github.com/AZCodingAccount/typora_plugin/releases/tag/1.8.46)，解压到node_modules文件夹即可
-
-<img src="https://my-picture-bed1-1321100201.cos.ap-beijing.myqcloud.com/mypictures/image-20240527174326845.png" alt="image-20240527174326845" width=50%/>
-
 
 #### 自定义配置
 
@@ -77,14 +70,9 @@
 
 1. 配置插件`显示隐藏`、`插件名称`、`快捷键`等信息，与插件配置相同，参考：[typora_plugin/plugin/global/settings/README.md](https://github.com/obgnail/typora_plugin/blob/master/plugin/global/settings/README.md)
 
-   <img src="https://my-picture-bed1-1321100201.cos.ap-beijing.myqcloud.com/mypictures/image-20240527175754400.png" alt="image-20240527175754400" width=50%/>
-
 2. 配置个人信息，这些信息在`plugin\global\settings\settings.default.toml`文件的 `article_uploader` 配置，参照注释
 
-
 关于cookie的获取，登录后随便找个异步请求把所有cookie值粘过来即可
-
-<img src="https://my-picture-bed1-1321100201.cos.ap-beijing.myqcloud.com/mypictures/image-20240527214113433.png" alt="image-20240527214113433" width=50% />
 
 #### 启用
 
@@ -106,9 +94,6 @@ LIST = [
     "article_uploader.upload_to_cn_blog"
 ]
 ```
-
-<img src="https://my-picture-bed1-1321100201.cos.ap-beijing.myqcloud.com/mypictures/%E7%A6%81%E7%94%A8.gif" alt="禁用" width=50% />
-
 
 ### 实现原理
 
@@ -149,10 +134,7 @@ sequenceDiagram
 
 发现逆向还是挺累的，用户还需要定期更新cookie，这两个网站用selenium自动化。就是枯燥无味的找`输入框`，`点按钮`，`进frame`，`执行赋值脚本`。
 
-❗wp同学需要注意，你的md编辑器一定要是wordpress自带的，因为我只适配了这个富文本编辑器。如下
-
-<img src="https://my-picture-bed1-1321100201.cos.ap-beijing.myqcloud.com/mypictures/image-20240527165333737.png" alt="image-20240527165333737" width=50% />
-
+❗wp同学需要注意，你的md编辑器一定要是wordpress自带的，因为我只适配了这个富文本编辑器。
 
 ### 未来拓展思路
 

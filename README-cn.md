@@ -1,17 +1,9 @@
-[English](https://github.com/obgnail/typora_plugin/blob/master/README.md) | 简体中文
+[English](README.md) | 简体中文
 
 <div align="center">
-  <h1>Typora Plugin</h1>
-  <img src="assets/typora_plugin.png" alt="typora_plugin" width="400">
-  <p align="center">
-    <a href="https://github.com/obgnail/typora_plugin/releases/latest"><img src="https://img.shields.io/github/v/release/obgnail/typora_plugin"></a>
-    <a href="https://github.com/obgnail/typora_plugin/stargazers"><img src="https://img.shields.io/github/stars/obgnail/typora_plugin?style=flat"></a>
-    <a href="https://github.com/obgnail/typora_plugin/issues"><img src="https://img.shields.io/github/issues-closed/obgnail/typora_plugin.svg"></a>
-    <a href="https://github.com/obgnail/typora_plugin/tree/master/plugin"><img src="https://img.shields.io/badge/implementation-Native-greenbule"></a>
-    <a href="https://github.com/obgnail/typora_plugin?tab=readme-ov-file#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95%E4%B8%80%E8%87%AA%E5%8A%A8"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-0085a1"></a>
-    <a href="https://github.com/obgnail/typora_plugin/blob/master/LICENSE"><img src="https://img.shields.io/github/license/obgnail/typora_plugin"></a>
-    <a href="https://deepwiki.com/obgnail/typora_plugin"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
-  </p>
+  <a href="https://github.com/sansan-01"><img src="assets/macos/maintainer-avatar.png" alt="sansan-01" width="88" height="88"></a>
+  <h1>Typora Plugin for macOS</h1>
+  <p>由 <a href="https://github.com/sansan-01">sansan-01</a> 维护</p>
 </div>
 
 
@@ -27,7 +19,7 @@
 
 ## 插件列表
 
-下方功能说明中的其他示例图沿用上游项目的图片。
+原版功能说明和示例见[上游项目文档](https://github.com/obgnail/typora_plugin/blob/master/README-cn.md#插件列表)。
 
 | 插件：导航与管理                            | 功能                               | 默认启用 |
 | :------------------------------------------ | :--------------------------------- | :------- |
@@ -131,8 +123,6 @@
 
 5. **验证安装状态**：重启 Typora，在编辑器正文区域单击右键调出上下文菜单。若菜单面板中呈现插件相关选项，即表示底层逻辑注入与初始化成功。
 
-![install](./assets/install.gif)
-
 ## 如何使用：Archlinux 平台
 
 ```sh
@@ -163,19 +153,13 @@ yay -S typora-free-with-plugin
 
 提供多文档标签页（Tab）管理功能。
 
-![window_tab](./assets/window_tab.gif)
-
 ### search_multi
 
 支持使用类似搜索引擎的指令语法，通过多条件组合进行高精度文件检索。
 
-![search_mutli](./assets/search_mutli.gif)
-
 ### auto_number
 
 为文档内的各层级章节、表格、图片及代码块等元素自动生成序号。
-
-![auto_number](./assets/auto_number.png)
 
 > 与纯 CSS 渲染方案不同，本插件通过拦截底层核心函数实现，解决了导出 PDF 时侧边栏目录丢失编号的技术缺陷。
 
@@ -219,8 +203,6 @@ yay -S typora-free-with-plugin
 
 支持对 `h1` 至 `h6` 标题节点下的所有文本段落执行折叠与展开操作。
 
-![collapse_paragraph](./assets/collapse_paragraph.gif)
-
 ### collapse_list
 
 支持对无序列表、有序列表及任务列表节点执行折叠与展开操作。
@@ -237,13 +219,9 @@ yay -S typora-free-with-plugin
 
 规范中英文排版体验：在文档的中文与英文、中文与数字相交边界自动插入适当的盘古之白（空格）。
 
-![md_padding](./assets/md_padding.gif)
-
 ### slash_commands
 
 提供类似 Notion 的斜杠（`/`）唤出式命令菜单。
-
-![slash_commands](./assets/slash_commands.gif)
 
 ### mouse_gestures
 
@@ -252,8 +230,6 @@ yay -S typora-free-with-plugin
 ### templater
 
 提供轻量级文档模板引擎。支持预定义内容架构并据此快速初始化新文件。
-
-![templater](./assets/templater.gif)
 
 ### fence_enhance
 
@@ -269,13 +245,9 @@ yay -S typora-free-with-plugin
 
 提供内嵌的轻量级命令行环境，支持快速执行自定义 Shell 指令及简单的交互式脚本操作。
 
-![commander](./assets/commander.png)
-
 ### command_palette
 
 实现类似 VS Code 的全局命令面板（快捷键：`Ctrl+Shift+P`）。
-
-![command_palette](./assets/command_palette.png)
 
 ### right_click_menu
 
@@ -294,13 +266,9 @@ yay -S typora-free-with-plugin
 
 为标准 Markdown 表格注入高级交互特性，包括数据检索、实时过滤、前端分页及多列联合排序功能。
 
-![datatables](./assets/datatables.png)
-
 ### resize_table
 
 通过 `Ctrl + 鼠标拖拽` 的交互方式，动态调整当前表格的行高与列宽样式。
-
-![resize_table](./assets/resize_table.gif)
 
 ### resize_image
 
@@ -334,13 +302,9 @@ yay -S typora-free-with-plugin
 
 通过封装内联 HTML 标签的方式，对当前选定文本快速应用自定义或预设的富文本样式。
 
-![text_stylize](./assets/text_stylize.gif)
-
 ### markdownlint
 
 Markdown 规范分析器。检测偏离最佳实践规范的语法并提供自动化修复。
-
-![markdownlint](./assets/markdownlint.png)
 
 ### resource_manager
 
@@ -368,36 +332,36 @@ Markdown 规范分析器。检测偏离最佳实践规范的语法并提供自�
 
 <table width="100%">
 <tr>
-<td width="33.33%" align="center"><a id="chart"><b>Chart.js</b></a><br><img src="./assets/chart.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="echarts"><b>ECharts</b></a><br><img src="./assets/echarts.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="markmap"><b>Markmap</b></a><br><img src="./assets/markmap.png" width="100%"></td>
+<td width="33.33%" align="center"><a id="chart"><b>Chart.js</b></a><br><img src="assets/macos/chart-export.png" alt="在 Mac 版 Typora 中导出的 Chart.js 图表" width="100%"></td>
+<td width="33.33%" align="center"><a id="echarts"><b>ECharts</b></a></td>
+<td width="33.33%" align="center"><a id="markmap"><b>Markmap</b></a></td>
 </tr>
 <tr>
-<td width="33.33%" align="center"><a id="vega_lite"><b>Vega-Lite</b></a><br><img src="./assets/vega_lite.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="plantUML"><b>PlantUML</b></a><br><img src="./assets/plantUML.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="drawIO"><b>Draw.io</b></a><br><img src="./assets/drawIO.png" width="100%"></td>
+<td width="33.33%" align="center"><a id="vega_lite"><b>Vega-Lite</b></a></td>
+<td width="33.33%" align="center"><a id="plantUML"><b>PlantUML</b></a></td>
+<td width="33.33%" align="center"><a id="drawIO"><b>Draw.io</b></a></td>
 </tr>
 <tr>
-<td width="33.33%" align="center"><a id="function_plot"><b>Function Plot</b></a><br><img src="./assets/function_plot.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="wavedrom"><b>WaveDrom</b></a><br><img src="./assets/wavedrom.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="abc"><b>ABC</b></a><br><img src="./assets/abcjs.png" width="100%"></td>
+<td width="33.33%" align="center"><a id="function_plot"><b>Function Plot</b></a></td>
+<td width="33.33%" align="center"><a id="wavedrom"><b>WaveDrom</b></a><br><img src="assets/macos/wavedrom.jpg" alt="在 Mac 版 Typora 中渲染的 WaveDrom 波形图" width="100%"></td>
+<td width="33.33%" align="center"><a id="abc"><b>ABC</b></a></td>
 </tr>
 <tr>
-<td width="33.33%" align="center"><a id="infographic"><b>Infographic</b></a><br><img src="./assets/infographic.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="marp"><b>Marp</b></a><br><img src="./assets/marp.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="calendar"><b>Calendar</b></a><br><img src="./assets/calendar.png" width="100%"></td>
+<td width="33.33%" align="center"><a id="infographic"><b>Infographic</b></a></td>
+<td width="33.33%" align="center"><a id="marp"><b>Marp</b></a></td>
+<td width="33.33%" align="center"><a id="calendar"><b>Calendar</b></a></td>
 </tr>
 <tr>
-<td width="33.33%" align="center"><a id="timeline"><b>Timeline</b></a><br><img src="./assets/timeline.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="kanban"><b>Kanban</b></a><br><img src="./assets/kanban.png" width="100%"></td>
-<td width="33.33%" align="center"><a id="chat"><b>Chat</b></a><br><img src="./assets/chat.png" width="100%"></td>
+<td width="33.33%" align="center"><a id="timeline"><b>Timeline</b></a></td>
+<td width="33.33%" align="center"><a id="kanban"><b>Kanban</b></a></td>
+<td width="33.33%" align="center"><a id="chat"><b>Chat</b></a></td>
 </tr>
 </table>
 
 <table width="100%">
 <tr>
-<td width="50%" align="center"><a id="markmap (TOC)"><b>Markmap (TOC)</b></a><br><img src="./assets/markmap.gif" width="100%"></td>
-<td width="50%" align="center"><a id="callouts"><b>Callouts</b></a><br><img src="./assets/callouts.png" width="100%"></td>
+<td width="50%" align="center"><a id="markmap (TOC)"><b>Markmap (TOC)</b></a></td>
+<td width="50%" align="center"><a id="callouts"><b>Callouts</b></a></td>
 </tr>
 </table>
 
@@ -443,8 +407,6 @@ Markdown 规范分析器。检测偏离最佳实践规范的语法并提供自�
 
 禁用所见即所得（WYSIWYG）模式下的标记符自动隐藏回调逻辑，确保 `**`、`##`、`_` 等所有源码排版标记始终处于显式渲染状态。
 
-![static_markers](./assets/static_markers.png)
-
 ### sidebar_enhance
 
 扩展原生文件侧边栏的功能边界：
@@ -484,7 +446,7 @@ Markdown 规范分析器。检测偏离最佳实践规范的语法并提供自�
 - **如何调整或修改插件配置？** `右键菜单` -> `交互插件` -> `插件配置`。所有插件与附加功能均支持独立且永久地启用或禁用。
 - **如何执行插件系统升级？** `右键菜单` -> `交互插件` -> `插件配置` -> `检查更新`。
 - **如何安全卸载插件组件？** `右键菜单` -> `交互插件` -> `插件配置` -> `卸载插件`。
-- **是否支持 macOS 端的 Typora？** 由于缺乏测试环境及硬件设备，目前暂不提供 macOS 版本的原生支持。
+- **是否支持 macOS 端的 Typora？** 本版已在 Apple 芯片 Mac 和 Typora 1.14.15 上实测。参见 [macOS 安装说明](macos/README.md)。
 - **有其他技术疑问或需要查阅讨论？** 请移步至 [AI Wiki](https://deepwiki.com/obgnail/typora_plugin) 检索文档，或在社区中发起讨论。
 
 ## 致谢
