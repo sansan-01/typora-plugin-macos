@@ -77,19 +77,50 @@ function ok(res, result) {
 function err(res, message, code) {
     // Business errors (missing file, etc.) return 200 with ok:false
     // so the loader can read the error message from the body
-    var httpCode = (code === 401 || code === 404) ? code : 200;
-    res.writeHead(httpCode, corsHeaders());
+    var httpCode = (code === 401 || code === 404 || code === 413) ? code : 200;
+    const headers = corsHeaders();
+    if (httpCode === 413) headers.Connection = "close";
+    res.writeHead(httpCode, headers);
     res.end(JSON.stringify({ ok: false, error: message }));
 }
 
+// Binary file writes use base64 in JSON, so allow up to roughly 24 MiB
+// of raw file data while bounding memory even for chunked uploads.
+const MAX_API_BODY_BYTES = 32 * 1024 * 1024;
+
 function parseBody(req) {
-    return new Promise(function (resolve) {
-        var chunks = [];
-        req.on("data", function (c) { chunks.push(c); });
-        req.on("end", function () {
-            try { resolve(JSON.parse(Buffer.concat(chunks).toString("utf8"))); }
-            catch (e) { resolve(null); }
+    return new Promise(function (resolve, reject) {
+        const chunks = [];
+        let size = 0;
+
+        function rejectOversize() {
+            req.pause();
+            req.removeListener("data", onData);
+            req.removeListener("end", onEnd);
+            chunks.length = 0;
+            const error = new Error("Bridge request body exceeds 32 MiB");
+            error.statusCode = 413;
+            reject(error);
+        }
+
+        function onData(chunk) {
+            size += chunk.length;
+            if (size > MAX_API_BODY_BYTES) return rejectOversize();
+            chunks.push(chunk);
+        }
+
+        req.once("error", reject);
+        req.once("close", function () {
+            if (!req.complete) reject(new Error("Bridge request closed before completion"));
         });
+        function onEnd() {
+            try { resolve(JSON.parse(Buffer.concat(chunks, size).toString("utf8"))); }
+            catch (error) { reject(new Error("Invalid JSON request body")); }
+        }
+
+        req.once("end", onEnd);
+        if (Number(req.headers["content-length"]) > MAX_API_BODY_BYTES) return rejectOversize();
+        req.on("data", onData);
     });
 }
 
@@ -208,7 +239,7 @@ var ROUTES = {
         return serializeStat(s);
     },
     "fs.mkdir": function (params) {
-        return fsp.mkdir(params[0], params[1] || { recursive: true });
+        return fsp.mkdir(params[0], params[1] ?? undefined);
     },
     "fs.mkdirSync": function (params) {
         return fs.mkdirSync(params[0], params[1] || { recursive: true });
@@ -220,38 +251,13 @@ var ROUTES = {
         return fsp.mkdir(params[0], { recursive: true });
     },
     "fs.copyFile": function (params) {
-        return fsp.copyFile(params[0], params[1]);
+        return fsp.copyFile(params[0], params[1], params[2] ?? 0);
     },
-    "fs.copySync": function (params) {
-        var src = params[0];
-        var dest = params[1];
-        var stat = fs.statSync(src);
-        if (stat.isDirectory()) {
-            fs.mkdirSync(dest, { recursive: true });
-            fs.readdirSync(src).forEach(function (f) {
-                fs.cpSync(path.join(src, f), path.join(dest, f), { recursive: true });
-            });
-        } else {
-            fs.copyFileSync(src, dest);
-        }
+    "fs.copySync": function ([src, dest]) {
+        return fs.cpSync(src, dest, { recursive: true, verbatimSymlinks: true });
     },
-    "fs.copy": function (params) {
-        // fs-extra style copy (async)
-        var src = params[0];
-        var dest = params[1];
-        return fsp.stat(src).then(function (stat) {
-            if (stat.isDirectory()) {
-                return fsp.mkdir(dest, { recursive: true }).then(function () {
-                    return fsp.readdir(src);
-                }).then(function (files) {
-                    return Promise.all(files.map(function (f) {
-                        return fsp.cp(path.join(src, f), path.join(dest, f), { recursive: true });
-                    }));
-                });
-            } else {
-                return fsp.copyFile(src, dest);
-            }
-        });
+    "fs.copy": function ([src, dest]) {
+        return fsp.cp(src, dest, { recursive: true, verbatimSymlinks: true });
     },
     "fs.rename": function (params) {
         return fsp.rename(params[0], params[1]);
@@ -340,20 +346,20 @@ var ROUTES = {
 
     // ── zlib ──
     "zlib.deflateRawSync": function (params) {
-        var input = typeof params[0] === "string" ? Buffer.from(params[0]) : params[0];
+        var input = params[1] ? Buffer.from(params[0], "base64") : params[0];
         return zlib.deflateRawSync(input).toString("base64");
     },
     "zlib.inflateRawSync": function (params) {
         var input = Buffer.from(params[0], "base64");
-        return zlib.inflateRawSync(input).toString("utf8");
+        return zlib.inflateRawSync(input).toString("base64");
     },
     "zlib.deflateSync": function (params) {
-        var input = typeof params[0] === "string" ? Buffer.from(params[0]) : params[0];
+        var input = params[1] ? Buffer.from(params[0], "base64") : params[0];
         return zlib.deflateSync(input).toString("base64");
     },
     "zlib.inflateSync": function (params) {
         var input = Buffer.from(params[0], "base64");
-        return zlib.inflateSync(input).toString("utf8");
+        return zlib.inflateSync(input).toString("base64");
     },
 
     // ── network fetch ──
@@ -515,16 +521,29 @@ ROUTES["http.closeServer"] = function ([name]) {
 };
 
 // ── Shell helpers ──
-ROUTES["shell.openExternal"] = function (params) {
-    var url = params[0];
-    cp.exec("open '" + url.replace(/'/g, "'\\''") + "'", function () {});
-    return undefined;
+function openWithMacOS(args) {
+    return new Promise(function (resolve, reject) {
+        cp.execFile("/usr/bin/open", args, function (error) {
+            if (error) reject(error);
+            else resolve("");
+        });
+    });
+}
+
+ROUTES["shell.openExternal"] = function ([value]) {
+    const url = new URL(value);
+    if (!["http:", "https:", "mailto:"].includes(url.protocol)) {
+        throw new Error("Unsupported external URL protocol");
+    }
+    return openWithMacOS(["--", url.href]);
 };
 
-ROUTES["shell.openPath"] = function (params) {
-    var filepath = params[0];
-    cp.exec("open -R '" + filepath.replace(/'/g, "'\\''") + "'", function () {});
-    return undefined;
+ROUTES["shell.openPath"] = function ([filepath]) {
+    return openWithMacOS(["--", filepath]);
+};
+
+ROUTES["shell.showItemInFolder"] = function ([filepath]) {
+    return openWithMacOS(["-R", "--", filepath]);
 };
 
 ROUTES["debug.log"] = function (params) {
@@ -610,7 +629,7 @@ var server = http.createServer(function (req, res) {
                 return err(res, e.message || String(e));
             }
         }).catch(function (e) {
-            return err(res, "Internal error: " + (e.message || String(e)));
+            if (!res.destroyed && !res.headersSent) return err(res, e.message || String(e), e.statusCode);
         });
     }
 

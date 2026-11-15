@@ -58,17 +58,25 @@ def atomic_write(path, data):
             temp.unlink(missing_ok=True)
 
 
-def build_file_panel(state):
-    source = MAC / "FilePanel.swift"
-    digest = hashlib.sha256(source.read_bytes()).hexdigest()[:16]
-    panel = state / f"file-panel-{digest}"
-    if not panel.exists():
+def build_native(state, source_name, output_name, compiler, *flags):
+    source = MAC / source_name
+    version = run("/usr/bin/xcrun", compiler, "--version", capture_output=True).stdout
+    sdk = run("/usr/bin/xcrun", "--show-sdk-path", capture_output=True).stdout
+    digest = hashlib.sha256(source.read_bytes() + b"\0" + version + b"\0" + sdk
+                            + b"\0" + os.fsencode(os.uname().machine)
+                            + b"\0" + json.dumps(flags).encode()).hexdigest()[:16]
+    binary = state / f"{output_name}-{digest}"
+    if not binary.is_file():
         with tempfile.TemporaryDirectory(dir=state) as directory:
-            output = Path(directory) / "file-panel"
-            run("/usr/bin/xcrun", "swiftc", "-parse-as-library", "-O",
-                "-module-cache-path", str(state / "swift-cache"), str(source), "-o", str(output))
-            output.replace(panel)
-    return panel
+            output = Path(directory) / output_name
+            run("/usr/bin/xcrun", compiler, *flags, source, "-o", output)
+            output.replace(binary)
+    return binary
+
+
+def build_file_panel(state):
+    return build_native(state, "FilePanel.swift", "file-panel", "swiftc",
+                        "-parse-as-library", "-O", "-module-cache-path", str(state / "swift-cache"))
 
 
 def require_closed(app, panel):
@@ -112,17 +120,19 @@ def inject(candidate, app, state, plugin, token, port, plist, label):
     info = plistlib.loads(info_path.read_bytes())
     executable = info["CFBundleExecutable"]
     launcher = contents / "MacOS" / "TyporaPluginLauncher"
-    run("/usr/bin/xcrun", "swiftc", "-parse-as-library", "-O", "-module-cache-path",
-        str(state / "swift-cache"), MAC / "LaunchTypora.swift", "-o", launcher)
+    shutil.copy2(build_native(state, "LaunchTypora.swift", "launcher", "swiftc",
+                              "-parse-as-library", "-O", "-module-cache-path", str(state / "swift-cache")),
+                 launcher)
     info["CFBundleExecutable"] = launcher.name
     info_path.write_bytes(plistlib.dumps(info))
     (contents / "Resources/typora-plugin-launch.json").write_text(json.dumps({
         "label": label, "plist": str(plist), "port": port, "executable": executable,
     }))
     menu_library = contents / "Frameworks/TyporaPluginMenu.dylib"
-    run("/usr/bin/xcrun", "clang", "-dynamiclib", "-fobjc-arc", "-O2",
-        "-framework", "AppKit", "-framework", "WebKit",
-        MAC / "NativeContextMenu.m", "-o", menu_library)
+    shutil.copy2(build_native(state, "NativeContextMenu.m", "native-menu", "clang",
+                              "-dynamiclib", "-fobjc-arc", "-O2",
+                              "-framework", "AppKit", "-framework", "WebKit"),
+                 menu_library)
     run("/usr/bin/codesign", "--force", "--sign", "-", menu_library)
     run("/usr/bin/codesign", "--force", "--sign", "-", contents / "MacOS" / executable)
     run("/usr/bin/codesign", "--force", "--sign", "-", candidate)
@@ -192,6 +202,21 @@ def restore_copy(backup, directory, app):
     candidate = directory / app.name
     verify(candidate)
     return candidate
+
+
+def remove_previous_runtime(state, previous, current):
+    if previous is None:
+        return
+    try:
+        spec = plistlib.loads(previous)
+        bridge = Path(spec["ProgramArguments"][1])
+        runtime_dir = bridge.parent.parent
+        if (bridge == runtime_dir / "macos" / "bridge.js" and runtime_dir.parent == state
+                and runtime_dir.name.startswith("runtime-") and runtime_dir != current
+                and not runtime_dir.is_symlink() and runtime_dir.is_dir()):
+            shutil.rmtree(runtime_dir)
+    except (OSError, ValueError, TypeError, KeyError, IndexError) as error:
+        print(f"无法清理旧插件运行目录：{error}", file=sys.stderr)
 
 
 def install(app, state, plist, label, panel, backup):
@@ -267,6 +292,7 @@ def install(app, state, plist, label, panel, backup):
                     if was_loaded:
                         start_agent(plist)
             shutil.rmtree(payload)
+    remove_previous_runtime(state, previous, payload)
     print(f"已安装到 {app}。以后从 Finder 或 Dock 正常打开 Typora。")
 
 

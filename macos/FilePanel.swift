@@ -170,10 +170,10 @@ func showPanel(mode: String, options: PanelOptions) throws -> PanelResult {
         panel.title = title
     }
     panel.canCreateDirectories = true
-    let contentTypes = (options.filters ?? []).flatMap(\.extensions).compactMap {
+    let extensions = (options.filters ?? []).flatMap(\.extensions)
+    panel.allowedContentTypes = extensions.contains("*") ? [] : extensions.compactMap {
         UTType(filenameExtension: $0)
     }
-    panel.allowedContentTypes = contentTypes
     if let path = options.defaultPath, !path.isEmpty {
         var directory = ObjCBool(false)
         let exists = FileManager.default.fileExists(atPath: path, isDirectory: &directory)

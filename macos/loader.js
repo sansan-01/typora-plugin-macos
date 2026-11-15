@@ -17,14 +17,14 @@
     // ════════════════════════════════════════════════════════
     var BRIDGE = "http://127.0.0.1:%%BRIDGE_PORT%%";
     var _token = "%%BRIDGE_TOKEN%%";
-    var _ready = _token && _token.indexOf("%%") < 0;
+    var _hasBridgeConfig = _token && _token.indexOf("%%") < 0;
     // Keep the browser fetch for localhost bridge RPC. External plugin
     // resources are routed through Node so file:// WKWebView pages avoid CORS.
     var _nativeFetch = window.fetch && window.fetch.bind(window);
 
 
     function call(method, params) {
-        if (!_ready || !_token) throw new Error("Bridge not available — start bridge.js first");
+        if (!_hasBridgeConfig) throw new Error("Bridge not available — start bridge.js first");
         var x = new XMLHttpRequest();
         x.open("POST", BRIDGE + "/api", false);
         x.setRequestHeader("Content-Type", "application/json");
@@ -42,15 +42,15 @@
         return r.result;
     }
 
-    function callAsync(method, params) {
-        if (!_ready || !_token) return Promise.reject(new Error("Bridge not available"));
+    function callAsync(method, params, signal) {
+        if (!_hasBridgeConfig) return Promise.reject(new Error("Bridge not available"));
         return _nativeFetch(BRIDGE + "/api", {
             method: "POST",
+            signal: signal,
             headers: { "Content-Type": "application/json", "X-Bridge-Token": _token },
             body: JSON.stringify({ method: method, params: params || [] })
         }).then(function(r) {
-            if (!r.ok) throw new Error("Bridge HTTP " + r.status);
-            return r.json();
+            return r.json().catch(function() { throw new Error("Bridge HTTP " + r.status); });
         }).then(function(r) {
             if (!r.ok) throw new Error(r.error || "Bridge error");
             return r.result;
@@ -178,7 +178,7 @@
             if (obj.base) base = obj.base;
             return dir ? dir.replace(/\/$/, "") + "/" + base : base;
         },
-        delimiter: "/",
+        delimiter: ":",
         sep: "/"
     };
 
@@ -426,8 +426,8 @@
         stat: function(fp) { return _fs.stat(fp); },
         lstat: function(fp) { return _fs.lstat(fp); },
         readdir: function(p, opts) { return _fs.readdir(p, opts); },
-        mkdir: function(p, opts) { return _fs.ensureDir(p); },
-        copyFile: function(src, dest) { return _fs.copy(src, dest); },
+        mkdir: function(p, opts) { return callAsync("fs.mkdir", [p, opts]); },
+        copyFile: function(src, dest, mode) { return callAsync("fs.copyFile", [src, dest, mode]); },
         rename: function(src, dest) { return _fs.rename(src, dest); },
         rm: function(p, opts) { return _fs.remove(p); },
         chmod: function(p, mode) { return _fs.chmod(p, mode); },
@@ -439,7 +439,7 @@
     // ════════════════════════════════════════════════════════
     window.process = {
         env: {},  // populated from bridge at init
-        cwd: function() { return _ready ? call("process.cwd", []) : "/"; },
+        cwd: function() { try { return call("process.cwd", []); } catch(e) { return "/"; } },
         argv: ["typora"], platform: "darwin",
         version: "v18.0.0", versions: { node: "18.0.0" },
         stderr: { write: function(){} }, stdout: { write: function(){} },
@@ -505,13 +505,19 @@
         byteLength: function(value) { return new MacBuffer(value).length;
         }
     };
-    window.setImmediate = function(f) { setTimeout(f, 0); };
-    window.clearImmediate = function() {};
+    window.setImmediate = function(f, ...args) { return setTimeout(f, 0, ...args); };
+    window.clearImmediate = function(id) { clearTimeout(id); };
     window.global = window;
 
     // ════════════════════════════════════════════════════════
     // reqnode — module loader (bridge-backed)
     // ════════════════════════════════════════════════════════
+    var staticOS = Object.create(null);
+    function readStaticOS(name) {
+        if (!(name in staticOS)) staticOS[name] = call("os." + name, []);
+        return staticOS[name];
+    }
+
     window.reqnode = function(id) {
         if (id === "fs-plus/node_modules/minimatch") {
             return {
@@ -530,10 +536,10 @@
         // ── os ──
         if (id === "os") {
             return {
-                homedir: function() { return call("os.homedir", []); },
-                platform: function() { return call("os.platform", []); },
-                arch: function() { return call("os.arch", []); },
-                tmpdir: function() { return call("os.tmpdir", []); },
+                homedir: function() { return readStaticOS("homedir"); },
+                platform: function() { return readStaticOS("platform"); },
+                arch: function() { return readStaticOS("arch"); },
+                tmpdir: function() { return readStaticOS("tmpdir"); },
                 cpus: function() { try { return call("os.cpus", []); } catch(e) { return []; } },
                 networkInterfaces: function() { try { return call("os.networkInterfaces", []); } catch(e) { return {}; } },
                 EOL: "\n"
@@ -667,23 +673,21 @@
 
         // ── zlib ──
         if (id === "zlib") {
+            function compress(method, input) {
+                var binary = window.Buffer.isBuffer(input) || ArrayBuffer.isView(input) || input instanceof ArrayBuffer;
+                var data = binary ? window.Buffer.from(input).toString("base64") : input;
+                return window.Buffer.from(call("zlib." + method, [data, binary]), "base64");
+            }
+            function decompress(method, input) {
+                // Preserve existing callers that pass compressed data as base64 text.
+                var data = typeof input === "string" ? input : window.Buffer.from(input).toString("base64");
+                return window.Buffer.from(call("zlib." + method, [data]), "base64");
+            }
             return {
-                deflateRawSync: function(input) {
-                    var b64 = call("zlib.deflateRawSync", [String(input)]);
-                    return { toString: function() { return b64; } };
-                },
-                inflateRawSync: function(input) {
-                    var str = call("zlib.inflateRawSync", [String(input)]);
-                    return { toString: function() { return str; } };
-                },
-                deflateSync: function(input) {
-                    var b64 = call("zlib.deflateSync", [String(input)]);
-                    return { toString: function() { return b64; } };
-                },
-                inflateSync: function(input) {
-                    var str = call("zlib.inflateSync", [String(input)]);
-                    return { toString: function() { return str; } };
-                },
+                deflateRawSync: function(input) { return compress("deflateRawSync", input); },
+                inflateRawSync: function(input) { return decompress("inflateRawSync", input); },
+                deflateSync: function(input) { return compress("deflateSync", input); },
+                inflateSync: function(input) { return decompress("inflateSync", input); },
             };
         }
 
@@ -691,9 +695,9 @@
         if (id === "electron") {
             return {
                 shell: {
-                    openExternal: function(url) { callAsync("shell.openExternal", [url]).catch(function() {}); },
-                    openPath: function(p) { callAsync("shell.openPath", [p]).catch(function() {}); },
-                    showItemInFolder: function(p) { callAsync("shell.openPath", [p]).catch(function() {}); },
+                    openExternal: function(url) { return callAsync("shell.openExternal", [url]); },
+                    openPath: function(p) { return callAsync("shell.openPath", [p]).catch(function(e) { return e.message; }); },
+                    showItemInFolder: function(p) { callAsync("shell.showItemInFolder", [p]).catch(function(e) { console.warn(e); }); },
                     beep: function() {},
                 },
                 ipcRenderer: { on: function() {}, send: function() {}, invoke: function() { return Promise.resolve({}); }, once: function() {}, removeListener: function() {} },
@@ -972,20 +976,12 @@
             return window.reqnode(full);
         };
 
-        var shortName = resolved.substring(BASE.length);
-        var fn = new Function("module","exports","require","reqnode","__dirname","__filename","global","console","process","Buffer","setTimeout","setInterval","setImmediate","clearImmediate", src);
         try {
-            fn(mod, mod.exports, __req, window.reqnode, __d, resolved, window, console, window.process, window.Buffer, setTimeout, setInterval, window.setImmediate, window.clearImmediate);
-        } catch(ex) {
-            var fn2 = new Function("module","exports","require","reqnode","__dirname","__filename","global","console","process","Buffer","setTimeout","setInterval", src);
-            try {
-                fn2(mod, mod.exports, __req, window.reqnode, __d, resolved, window, console, window.process, window.Buffer, setTimeout, setInterval);
-            } catch(ex2) {
-                var firstMessage = ex && (ex.stack || ex.message) || String(ex);
-                var secondMessage = ex2 && (ex2.stack || ex2.message) || String(ex2);
-                console.error("[loader] module failed", shortName, firstMessage, secondMessage);
-                throw new Error("Module '" + shortName + "' failed: " + secondMessage + " (initial: " + firstMessage + ")");
-            }
+            var fn = new Function("module","exports","require","reqnode","__dirname","__filename","global","console","process","Buffer","setTimeout","setInterval", src);
+            fn(mod, mod.exports, __req, window.reqnode, __d, resolved, window, console, window.process, window.Buffer, setTimeout, setInterval);
+        } catch(error) {
+            console.error("[loader] module failed", resolved.substring(BASE.length), error);
+            throw error;
         }
         _modCache[resolved] = mod.exports;
         return mod.exports;
@@ -1003,17 +999,30 @@
     // Init on window.load
     // ════════════════════════════════════════════════════════
 
-window.addEventListener("load", function() {
-        try { call("debug.log", ["Editor loaded at " + location.protocol]); } catch (error) {}
-        // Bridge connectivity check
-        if (_ready) {
+    async function waitForBridge() {
+        for (var attempt = 0; attempt < 8; attempt++) {
+            var controller = new AbortController();
+            var timeout = setTimeout(function() { controller.abort(); }, 500);
             try {
-                window.process.env = call("process.env", []);
-                window.process.cwd = function() { try { return call("process.cwd", []); } catch(e) { return "/"; } };
-            } catch(e) {
-                _ready = false;
+                return await callAsync("process.env", [], controller.signal);
+            } catch(error) {
+                if (attempt === 7) throw error;
+            } finally {
+                clearTimeout(timeout);
             }
+            await new Promise(function(resolve) { setTimeout(resolve, 250); });
         }
+    }
+
+    window.addEventListener("load", async function() {
+        if (!_hasBridgeConfig) return;
+        try {
+            window.process.env = await waitForBridge();
+        } catch(error) {
+            reportStartupError(error);
+            return;
+        }
+        try { call("debug.log", ["Editor loaded at " + location.protocol]); } catch(error) {}
 
         if (window.JSBridge && typeof JSBridge.invoke === "function") {
             var nativeInvoke = JSBridge.invoke;
