@@ -855,6 +855,14 @@ class utils {
     return drainPromise
   }
 
+  static macBridge = Object.freeze({
+    get active() { return !!window.__typoraPluginMacState },
+    setContextMenu: (generation, items) => window.bridge?.callSync?.("typoraPluginContext.setMenu", { generation, items }),
+    clearContextMenu: () => window.bridge?.callSync?.("contextMenu.setItems", []),
+    listFonts: () => JSBridge.invoke("plugin.listMacFonts"),
+    stageUpdate: proxy => JSBridge.invoke("plugin.stageMacUpdate", proxy),
+  })
+
   // ---------- Business Operations ----------
   static exitTypora = () => JSBridge.invoke("window.close")
   static restartTypora = () => {

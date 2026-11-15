@@ -44,7 +44,7 @@ class RightClickMenuPlugin extends BasePlugin {
   unavailableActName = this.i18n.t("act.disabled")
   defaultDisableHint = this.i18n.t("actHint.disabled")
   macMenu = null
-  supportShortcut = !!window.__typoraPluginMacState || !!document.querySelector(".ty-menu-shortcut")
+  supportShortcut = this.utils.macBridge.active || !!document.querySelector(".ty-menu-shortcut")
   menuManager = createMenuManager()
   ACTIONS = {
     hide_other_options: () => {
@@ -68,7 +68,7 @@ class RightClickMenuPlugin extends BasePlugin {
     this.utils.settings.autoSave(this)
     this.utils.eventHub.on(this.utils.eventHub.eventType.allPluginsHadInjected, () => {
       setTimeout(() => {
-        if (window.__typoraPluginMacState) {
+        if (this.utils.macBridge.active) {
           this._installMacMenu()
           return
         }
@@ -170,8 +170,8 @@ class RightClickMenuPlugin extends BasePlugin {
         if (item.shortcut) {
           const shortcut = document.createElement("span")
           shortcut.className = "plugin-mac-context-shortcut"
-          shortcut.textContent = item.shortcut.replace(/Ctrl\+|Shift\+|Alt\+/g,
-            key => ({ "Ctrl+": "⌘", "Shift+": "⇧", "Alt+": "⌥" })[key])
+          shortcut.textContent = item.shortcut.replace(/\b(Ctrl|Meta|Cmd|Shift|Alt)\+/g,
+            (_, key) => ({ Ctrl: "⌘", Meta: "⌘", Cmd: "⌘", Shift: "⇧", Alt: "⌥" })[key])
           row.append(shortcut)
         }
         panel.append(row)
@@ -189,7 +189,7 @@ class RightClickMenuPlugin extends BasePlugin {
       dismiss()
       anchor = $(target)
       previousFocus = document.activeElement
-      const { items, actions } = this._macMenuItems(anchor, !keyboard)
+      const { items, actions } = this._macMenuItems(anchor)
       if (!items.length) return false
       render(items, actions, 0, position)
       if (keyboard) focusRow(panels[0].panel, 1)
@@ -199,11 +199,11 @@ class RightClickMenuPlugin extends BasePlugin {
     window.addEventListener("contextmenu", ev => {
       if (ev.altKey || ev.ctrlKey || ev.metaKey || !ev.target.closest?.("#write")) return
       const target = $(ev.target)
-      const { items, actions } = this._macMenuItems(target, true)
+      const { items, actions } = this._macMenuItems(target)
       if (!items.length) return
       try {
         const id = ++generation
-        if (window.bridge?.callSync?.("typoraPluginContext.setMenu", { generation: id, items }) === true) {
+        if (this.utils.macBridge.setContextMenu(id, items) === true) {
           dismiss()
           nativeContext = { id, target, actions }
           return
@@ -214,7 +214,7 @@ class RightClickMenuPlugin extends BasePlugin {
       if (!show(ev.target, { x: ev.clientX, y: ev.clientY })) return
       ev.preventDefault()
       ev.stopImmediatePropagation()
-      window.bridge?.callSync?.("contextMenu.setItems", [])
+      this.utils.macBridge.clearContextMenu()
     }, true)
     window.__typoraPluginNativeMenuAction = (id, index) => {
       if (nativeContext?.id !== id || !Number.isInteger(index)) return
@@ -235,7 +235,8 @@ class RightClickMenuPlugin extends BasePlugin {
         const target = node instanceof Element ? node : node?.parentElement
         const write = document.querySelector("#write")
         if (!write) return
-        const selected = write.contains(target) ? target : write
+        const focusedFence = document.activeElement?.closest("#write .md-fences[cid]")
+        const selected = focusedFence || (write.contains(target) ? target : write)
         const rect = selected.getBoundingClientRect()
         if (!show(selected, { x: rect.left, y: rect.top }, true)) return
       } else {
@@ -263,7 +264,7 @@ class RightClickMenuPlugin extends BasePlugin {
     }, true)
   }
 
-  _macMenuItems = (anchor, includeCodeItems) => {
+  _macMenuItems = (anchor) => {
     const actions = []
     const clean = items => {
       const visible = items.filter(Boolean).filter((item, i, list) =>
@@ -315,7 +316,7 @@ class RightClickMenuPlugin extends BasePlugin {
       const children = clean(LIST.map(key => item(key)))
       return children.length ? { title, children } : null
     }))
-    const codeBlock = includeCodeItems && anchor[0]?.closest("#write .md-fences[cid]")
+    const codeBlock = anchor[0]?.closest("#write .md-fences[cid]")
     const fence = codeBlock && this.utils.getPlugin("fence_enhance")
     if (fence) {
       const toMenuItem = ({ label, action, children, checked }) => {
@@ -537,7 +538,7 @@ class RightClickMenuPlugin extends BasePlugin {
 
   getDynamicActions = () => this.i18n.fillActions([
     { act_value: "toggle_hotkey", act_state: this.config.SHOW_PLUGIN_HOTKEY, act_hidden: !this.supportShortcut },
-    { act_value: "hide_other_options", act_state: this.config.HIDE_OTHER_OPTIONS, act_hidden: !!window.__typoraPluginMacState },
+    { act_value: "hide_other_options", act_state: this.config.HIDE_OTHER_OPTIONS, act_hidden: this.utils.macBridge.active },
   ])
 
   call = action => this.ACTIONS[action]?.()

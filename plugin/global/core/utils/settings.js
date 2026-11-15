@@ -3,6 +3,8 @@ class Settings {
   DEFAULT_TOML = "settings.default.toml"
   META = { $id: "https://github.com/obgnail/typora_plugin", $version: "1" }
 
+  _writeQueue = Promise.resolve()
+
   constructor(utils) {
     this.utils = utils
   }
@@ -28,7 +30,13 @@ class Settings {
     return exist ? homePath : this.userTomlOriginPath
   }
 
-  handle = async (fixedName, handler) => {
+  _enqueueWrite = (operation) => {
+    const write = this._writeQueue.then(operation)
+    this._writeQueue = write.catch(() => {})
+    return write
+  }
+
+  handle = (fixedName, handler) => this._enqueueWrite(async () => {
     const path = await this.getUserTomlPath()
     const all = await this.utils.readTomlFile(path)
     if (!all[fixedName]) {
@@ -37,7 +45,7 @@ class Settings {
     handler(all[fixedName], all)
     const content = this.utils.stringifyToml(all).replace(/\r\n/g, "\n")
     return this.utils.writeFile(path, content)
-  }
+  })
 
   clear = async (fixedName) => this.handle(fixedName, (_, all) => delete all[fixedName])
   save = async (fixedName, updateObject) => this.handle(fixedName, (target, all) => all[fixedName] = this.utils.merge(target, updateObject))
@@ -46,7 +54,9 @@ class Settings {
     const save = this.save
     plugin.config = new Proxy(plugin.config, {
       set(target, property, value, receiver) {
-        save(plugin.fixedName, { [property]: value })
+        save(plugin.fixedName, { [property]: value }).catch(error => {
+          console.error("Unable to save plugin settings", plugin.fixedName, error)
+        })
         return Reflect.set(...arguments)
       },
     })
@@ -85,7 +95,7 @@ class Settings {
     await this.utils.Package.FsExtra.outputJson(exportPath, { ...this.META, ...base })
   }
 
-  import = async (importPath) => {
+  import = importPath => this._enqueueWrite(async () => {
     const settings = await this.utils.Package.FsExtra.readJson(importPath)
     const mismatch = Object.keys(this.META).some(key => settings[key] !== this.META[key])
     if (mismatch) {
@@ -96,7 +106,7 @@ class Settings {
     const obj = this.utils.pickBy(settings, (obj, key) => isObject(obj) && Object.hasOwn(plugins, key))
     const content = this.utils.stringifyToml(obj).replace(/\r\n/g, "\n")
     return this.utils.writeFile(await this.getUserTomlPath(), content)
-  }
+  })
 }
 
 module.exports = Settings

@@ -827,20 +827,41 @@ class WindowTabPlugin extends BasePlugin {
         console.error("Rename failed to stat file", err)
       }
     }
-    if (window.__typoraPluginMacState) {
+    if (this.utils.macBridge.active) {
       const channel = new BroadcastChannel("plugin:window-tab:rename")
-      channel.onmessage = ({ data }) => rename(data)
       window.addEventListener("pagehide", () => channel.close(), { once: true })
-      const syncRename = change => {
+
+      const fs = this.utils.Package.FsExtra
+      let pending = Promise.resolve()
+      const enqueue = task => {
+        pending = pending.then(task).catch(error => console.warn("Unable to update renamed tab", error))
+      }
+      const broadcastRename = change => {
         const isDir = rename(change)
         if (isDir !== undefined) channel.postMessage({ ...change, isDir })
       }
+      channel.onmessage = ({ data }) => {
+        if (typeof data?.isDir === "boolean") enqueue(() => rename(data))
+      }
       this.utils.decorator.afterCall(() => JSBridge, "invoke", (_, method, event, change) => {
-        if (method === "app.sendEvent" && event === "didRename" && change) syncRename(change)
+        if (method !== "app.sendEvent" || event !== "didRename" || !change?.oldPath || !change.newPath) return
+        enqueue(async () => {
+          const isDir = change.isDir ?? (await fs.stat(change.newPath)).isDirectory()
+          broadcastRename({ ...change, isDir })
+        })
       })
       window.addEventListener("typora-plugin-mac-path-changed", ({ detail }) => {
-        // Save As also changes the active path, while leaving the original file in place.
-        if (!this.utils.Package.FsExtra.existsSync(detail.oldPath)) syncRename(detail)
+        if (!detail?.oldPath || !detail.newPath || detail.oldPath === detail.newPath) return
+        enqueue(async () => {
+          // Save As also changes the active document path, while leaving the original file in place.
+          try {
+            await fs.access(detail.oldPath)
+          } catch (error) {
+            // The macOS bridge forwards the syscall message without the Node error code.
+            if (error.code !== "ENOENT" && !/^ENOENT:/.test(error.message)) throw error
+            broadcastRename({ ...detail, isDir: false })
+          }
+        })
       })
     } else {
       reqnode("electron").ipcRenderer.on("didRename", (_, change) => rename(change))

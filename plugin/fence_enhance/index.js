@@ -33,12 +33,12 @@ ${this.config.HIGHLIGHT_ON_FOCUS ? `.md-focus .CodeMirror-activeline { backgroun
 
   process = async () => {
     this.utils.settings.autoSave(this)
-    if (window.__typoraPluginMacState) {
+    if (this.utils.macBridge.active) {
       this.utils.contextMenu.register(window, ev => {
         if (ev.altKey || ev.shiftKey || ev.ctrlKey || ev.metaKey || this.utils.getPlugin("right_click_menu")?.macMenu) return
         const fence = ev.target.closest?.("#write .md-fences[cid]")
         if (!fence) return
-        window.bridge?.callSync?.("contextMenu.setItems", [])
+        this.utils.macBridge.clearContextMenu()
         return [{ label: this.i18n.t("carbon.copy"), action: () => this.copyFence(fence) }]
       }, true)
     }
@@ -83,16 +83,18 @@ ${this.config.HIGHLIGHT_ON_FOCUS ? `.md-focus .CodeMirror-activeline { backgroun
 
   chooseCarbonFont = async () => {
     try {
-      const fonts = [...new Set(await JSBridge.invoke("plugin.listMacFonts"))]
+      const fonts = [...new Set(await this.utils.macBridge.listFonts())]
         .filter(font => typeof font === "string" && font.trim())
         .sort((a, b) => a.localeCompare(b))
       if (!fonts.length) throw new Error("No system fonts available")
       const current = this.carbonPreferences.get()?.font
-      const font = fonts.includes(current) ? current : fonts.includes("Menlo") ? "Menlo" : fonts[0]
+      const preferred = [current, "Menlo", "SF Mono", "JetBrains Mono", "Monaco", "Fira Code", "Source Code Pro", "Consolas", "Courier New"]
+      const choices = [...new Set([...preferred.filter(font => fonts.includes(font)), ...fonts])]
+      const font = choices[0]
       const { response, data } = await this.utils.formDialog.modal({
         title: this.i18n.t("carbon.fontPicker"),
         schema: ({ Controls }) => [
-          Controls.Select("font").Label(this.i18n.t("carbon.font")).Options(fonts),
+          Controls.Select("font").Label(this.i18n.t("carbon.font")).Options(choices),
         ],
         data: { font },
       })

@@ -10,7 +10,7 @@ class UpdaterPlugin extends BasePlugin {
   }
 
   call = async (action, meta) => {
-    if (window.__typoraPluginMacState) {
+    if (this.utils.macBridge.active) {
       return this.macUpdate()
     }
     if (this.config.PROXY) {
@@ -32,9 +32,9 @@ class UpdaterPlugin extends BasePlugin {
 
   _withLock = this.utils.singleflight(fn => fn(), () => "update")
   silentUpdate = proxy => this._withLock(async () => {
-    if (window.__typoraPluginMacState) {
+    if (this.utils.macBridge.active) {
       try {
-        await JSBridge.invoke("plugin.stageMacUpdate", await this.getProxy(proxy))
+        await this.utils.macBridge.stageUpdate(await this.getProxy(proxy))
       } catch (error) {
         console.warn("Unable to stage the Mac plugin update", error)
       }
@@ -49,7 +49,7 @@ class UpdaterPlugin extends BasePlugin {
     const close = this.utils.notification.show(this.i18n.t("update.pleaseWait"), "info", 0)
     let result, detail
     try {
-      result = await JSBridge.invoke("plugin.stageMacUpdate", await this.getProxy())
+      result = await this.utils.macBridge.stageUpdate(await this.getProxy())
       detail = [result.revision, ...(result.files || [])].join("\n")
     } catch (error) {
       detail = error.message
@@ -385,10 +385,28 @@ const getSysProxy = () => {
     )
   }
   if (File.isMac) {
-    return _get(`networksetup -getwebproxy "Wi-Fi"`, stdout => {
-      const [_, enable, server, port] = stdout.match(/Enabled: (.+)\nServer: (.+)\nPort: (.+)\n/i) || []
-      return (enable === "Yes" && server && port) ? `${server}:${port}` : null
-    })
+    return _get("/usr/sbin/scutil --proxy", parseMacProxy)
+  }
+  return null
+}
+
+const parseMacProxy = stdout => {
+  const proxy = {}
+  let depth = 0
+  for (const line of stdout.split("\n").map(line => line.trim())) {
+    if (depth === 1) {
+      const field = line.match(/^(HTTPS?(?:Enable|Proxy|Port))\s*:\s*(.+)$/)
+      if (field) proxy[field[1]] = field[2]
+    }
+    if (line.endsWith("{")) depth++
+    if (line === "}") depth--
+  }
+  for (const protocol of ["HTTPS", "HTTP"]) {
+    const host = proxy[protocol + "Proxy"]
+    const port = proxy[protocol + "Port"]
+    if (proxy[protocol + "Enable"] !== "1" || !host || !/^\d+$/.test(port) || +port < 1 || +port > 65535) continue
+    const address = host.includes(":") && !host.startsWith("[") ? `[${host}]` : host
+    return `${address}:${port}`
   }
   return null
 }

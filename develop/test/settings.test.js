@@ -242,3 +242,33 @@ describe("Scripts, Actions & File IO", () => {
     }
   })
 })
+
+describe("User settings writes", () => {
+  const Settings = require("../../plugin/global/core/utils/settings")
+
+  it("preserves simultaneous updates across a failed write", async () => {
+    let disk = JSON.stringify({ global: { LOCALE: "auto" } })
+    const settings = new Settings({
+      readTomlFile: async () => JSON.parse(disk),
+      stringifyToml: JSON.stringify,
+      merge: (target, update) => ({ ...target, ...update }),
+      writeFile: async (file, content) => {
+        if (JSON.parse(content).failed) throw new Error("Write failed")
+        disk = content
+        return true
+      },
+    })
+    settings.getUserTomlPath = async () => "settings.user.toml"
+
+    await Promise.all([
+      settings.save("remote_control", { AUTH_TOKEN: "test-token" }),
+      assert.rejects(settings.save("failed", { ENABLE: true }), /Write failed/),
+      settings.save("window_tab", { ENABLE: true }),
+    ])
+    assert.deepEqual(JSON.parse(disk), {
+      global: { LOCALE: "auto" },
+      remote_control: { AUTH_TOKEN: "test-token" },
+      window_tab: { ENABLE: true },
+    })
+  })
+})
