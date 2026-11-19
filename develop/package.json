@@ -35,7 +35,7 @@
     "markdownlint-rule-helpers": "0.31.0",
     "markmap-common": "0.17.1",
     "markmap-lib": "0.17.2",
-    "markmap-view": "0.17.2",
+    "markmap-view": "0.18.13",
     "md-padding": "1.10.0",
     "mdast-util-from-markdown": "2.1.0",
     "mdast-util-gfm": "3.1.0",
