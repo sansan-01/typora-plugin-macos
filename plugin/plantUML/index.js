@@ -35,13 +35,23 @@ class PlantUMLPlugin extends BasePlugin {
     $wrap[0].textContent = "Querying..."
     const result = await this._memorizedRender(content)
     if (result instanceof Error) throw result
-    $wrap[0].innerHTML = this._buildHTML(result)
+    const output = this._buildOutput(result)
+    $wrap[0].textContent = ""
+    $wrap[0].appendChild(output)
   }
 
-  _buildHTML({ contentType, buffer }) {
-    if (contentType.includes("svg")) return buffer.toString("utf-8")
-    if (contentType.includes("image/")) return `<img src="data:${contentType};base64,${buffer.toString("base64")}">`
-    if (contentType.includes("text/plain")) return `<pre>${buffer.toString("utf-8")}</pre>`
+  _buildOutput({ contentType, buffer }) {
+    const mimeType = contentType.split(";")[0].trim().toLowerCase()
+    if (/^image\/[a-z0-9][a-z0-9.+-]*$/.test(mimeType)) {
+      const image = document.createElement("img")
+      image.src = `data:${mimeType};base64,${buffer.toString("base64")}`
+      return image
+    }
+    if (mimeType === "text/plain") {
+      const text = document.createElement("pre")
+      text.textContent = buffer.toString("utf-8")
+      return text
+    }
     throw new Error(`Unsupported Format: ${contentType}`)
   }
 

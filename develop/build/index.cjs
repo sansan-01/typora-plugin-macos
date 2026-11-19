@@ -115,7 +115,7 @@ const pluginVendor = {
 
 const SHARED_VENDORS_CONFIG = {
   "js-yaml": sharedVendor.download({ outFileName: "js-yaml.js", url: "https://cdn.jsdelivr.net/npm/js-yaml@latest/dist/js-yaml.min.js" }),
-  "markdown-it": sharedVendor.download({ outFileName: "markdown-it.js", url: "https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js" }),
+  "markdown-it": sharedVendor.download({ outFileName: "markdown-it.js", url: "https://cdn.jsdelivr.net/npm/markdown-it@14.3.3/dist/markdown-it.min.js" }),
   "$markdown-it-plugins": sharedVendor.bundle({ outFileName: "markdown-it-plugins.js", entryInBuild: "markdown-it-plugins.mjs" }),
   "smol-toml": sharedVendor.bundle({ outFileName: "smol-toml.js", entryInBuild: "smol-toml.mjs" }),
   "node-fetch-commonjs": sharedVendor.bundle({ outFileName: "node-fetch-commonjs.js", entryInBuild: "node-fetch-commonjs.cjs" }),
@@ -173,12 +173,12 @@ const PLUGIN_VENDORS_CONFIG = {
     },
   }),
   "abc": pluginVendor.download({ files: { "plugin/abc/abcjs-basic-min.js": "https://raw.githubusercontent.com/paulrosen/abcjs/refs/heads/main/dist/abcjs-basic-min.js" } }),
-  "chart": pluginVendor.download({ files: { "plugin/chart/chart.min.js": "https://cdn.jsdelivr.net/npm/chart.js" } }),
-  "echarts": pluginVendor.download({ files: { "plugin/echarts/echarts.min.js": "https://raw.githubusercontent.com/apache/echarts/refs/heads/master/dist/echarts.min.js" } }),
+  "chart": pluginVendor.download({ files: { "plugin/chart/chart.min.js": "https://cdn.jsdelivr.net/npm/chart.js@4.6.1" } }),
+  "echarts": pluginVendor.download({ files: { "plugin/echarts/echarts.min.js": "https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js" } }),
   "wavedrom": pluginVendor.download({
     files: {
-      "plugin/wavedrom/wavedrom.min.js": "https://cdn.jsdelivr.net/npm/wavedrom@latest/wavedrom.unpkg.min.js",
-      "plugin/wavedrom/skins/narrow.js": "https://cdn.jsdelivr.net/npm/wavedrom@latest/skins/narrow.js",
+      "plugin/wavedrom/wavedrom.min.js": "https://cdn.jsdelivr.net/npm/wavedrom@3.8.0/wavedrom.unpkg.min.js",
+      "plugin/wavedrom/skins/narrow.js": "https://cdn.jsdelivr.net/npm/wavedrom@3.8.0/skins/narrow.js",
     },
   }),
   "dataTables": pluginVendor.download({

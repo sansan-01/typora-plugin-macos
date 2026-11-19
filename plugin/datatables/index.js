@@ -85,7 +85,7 @@ const appendColumnFilter = api => {
       .on("change", () => column.search(select.val()).draw())
       .on("click", () => false)
     select.append($("<option value=''></option>"))
-    column.cache("search").sort().unique().each(d => select.append($(`<option value="${d}">${d}</option>`)))
+    column.cache("search").sort().unique().each(d => select.append($("<option />").val(d).text(d)))
   })
 }
 

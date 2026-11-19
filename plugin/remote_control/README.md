@@ -4,13 +4,13 @@ Exposes Typora's full capabilities—including all Typora Plugin features—via 
 
 ## Usage
 
-Enable the `remote_control` plugin. Once Typora is launched, a `JSON RPC Server` will automatically run in the background. You can then write a `JSON RPC Client` to interact with Typora.
+Set a unique `remote_control.AUTH_TOKEN` in your local `settings.user.toml`, then enable the `remote_control` plugin. The macOS launcher generates a token in its private settings directory when needed. Once Typora is launched, the JSON-RPC server listens on `127.0.0.1`. Set `JSON_RPC_AUTH_TOKEN` in the client environment to the same token.
 
 ```javascript
 const RpcSDK = require("your_path_to_typora_dir/plugin/remote_control/client.js")
 
-const address = "http://localhost:5080/"
-const auto_token = "secret-token"
+const address = "http://127.0.0.1:5080/"
+const auto_token = process.env.JSON_RPC_AUTH_TOKEN
 const sdk = new RpcSDK(address, { token: auto_token })
 
 async function main() {
@@ -46,3 +46,5 @@ async function main() {
 
 main()
 ```
+
+To use the development scripts, copy `develop/.env.example` to `develop/.env` and fill in the local values. `ALLOWED_METHODS` lists the plugin methods available through `plugin.call`.

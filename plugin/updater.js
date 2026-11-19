@@ -128,6 +128,7 @@ class UpdaterPlugin extends BasePlugin {
 class Updater {
   latestVersionInfo = null
   currentVersionInfo = null
+  preserveBackup = false
   relpaths = {
     rootDir: "./plugin",
   }
@@ -148,8 +149,9 @@ class Updater {
     this.paths = {
       stagingDir: "",
       versionFile: this.utils.joinPluginPath("./plugin/VERSION.json"),
-      workDir: this.path.join(this.utils.tempFolder, "typora-plugin-updater"),
-      backupDir: this.path.join(this.utils.tempFolder, "typora-plugin-updater-backup"),
+      workspaceDir: "",
+      workDir: "",
+      backupDir: "",
     }
   }
 
@@ -201,24 +203,20 @@ class Updater {
   }
 
   async prepare() {
-    console.log("[1/6] Prepare: cleaning workspace")
-    await Promise.all([this.fs.emptyDir(this.paths.workDir), this.fs.remove(this.paths.backupDir)])
-    await this.chmod(this.utils.joinPluginPath(this.relpaths.rootDir))
+    console.log("[1/6] Preparing workspace")
+    this.paths.workspaceDir = await this.fs.mkdtemp(this.path.join(this.utils.tempFolder, "typora-plugin-updater-"))
+    this.paths.workDir = this.path.join(this.paths.workspaceDir, "work")
+    this.paths.backupDir = this.path.join(this.paths.workspaceDir, "backup")
+    this.preserveBackup = false
+    await this.fs.ensureDir(this.paths.workDir)
   }
 
   async cleanup() {
+    if (!this.paths.workspaceDir) return
     try {
-      await Promise.all([this.fs.remove(this.paths.workDir), this.fs.remove(this.paths.backupDir)])
+      await this.fs.remove(this.preserveBackup ? this.paths.workDir : this.paths.workspaceDir)
     } catch (e) {
       console.warn("Cleanup warning:", e.message)
-    }
-  }
-
-  async chmod(dir) {
-    try {
-      await this.fs.chmod(dir, 0o777)
-    } catch (e) {
-      console.debug(`Cannot chmod ${dir}:`, e.message)
     }
   }
 
@@ -235,7 +233,8 @@ class Updater {
   async _fetchJson(url) {
     try {
       const resp = await this.utils.fetch(url, this.requestOption)
-      return resp.json()
+      if (!resp.ok) throw new Error(`Version check failed: HTTP ${resp.status}`)
+      return await resp.json()
     } catch (e) {
       console.error("Fetch version failed:", e)
       return null
@@ -335,6 +334,8 @@ class Updater {
       try {
         await moveContent(backup, dst)
       } catch (restoreErr) {
+        this.preserveBackup = true
+        console.error("Update backup retained at", backup)
         console.error("Failed to restore partial backup", restoreErr)
       }
       throw err
@@ -349,6 +350,8 @@ class Updater {
         await moveContent(backup, dst)
         console.log("Rollback successful.")
       } catch (rollbackError) {
+        this.preserveBackup = true
+        console.error("Update backup retained at", backup)
         console.error("FATAL: Rollback failed!", rollbackError)
         throw rollbackError
       }

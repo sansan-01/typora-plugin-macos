@@ -38,7 +38,10 @@ class Settings {
 
   handle = (fixedName, handler) => this._enqueueWrite(async () => {
     const path = await this.getUserTomlPath()
-    const all = await this.utils.readTomlFile(path)
+    const all = await this.utils.readTomlFile(path).catch(error => {
+      if (error.code === "ENOENT") return {}
+      throw error
+    })
     if (!all[fixedName]) {
       all[fixedName] = {}
     }

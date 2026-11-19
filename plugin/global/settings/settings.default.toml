@@ -1840,7 +1840,7 @@ DECRYPT_HOTKEY = ""
 # =========== [ Secret Key ] ===========
 # Secret Key
 # Warning: Modifying this renders files encrypted with previous keys un-decryptable
-SECRET_KEY = "n0hLis5FjgQxa3f31sSa2wm37J81g3upTlq9it9WlfK"
+SECRET_KEY = ""
 
 # =========== [ Interaction ] ===========
 # Display a confirmation dialog after encryption/decryption
@@ -2640,8 +2640,8 @@ wordpress = {
   enabled = true,
   hostname = "https://blog.bugdesigner.cn",
   loginUrl = "https://blog.bugdesigner.cn/superman/",
-  username = "demo",
-  password = "demo1",
+  username = "",
+  password = "",
 }
 
 # Authentication parameters for CnBlog integration
@@ -2650,8 +2650,8 @@ wordpress = {
 #   password: Account Password
 cnblog = {
   enabled = true,
-  username = "demo2",
-  password = "demo2",
+  username = "",
+  password = "",
 }
 
 # Authentication parameters for CSDN integration
@@ -2659,7 +2659,7 @@ cnblog = {
 #   cookie : Authentication cookie string. Must be extracted manually from the browser, and re-extracted once it expires
 csdn = {
   enabled = true,
-  cookie = "log_Id_pv=27; log_Id_view=857; dc_tos=se1n4s; log_Id_click=37......",
+  cookie = "",
 }
 
 
@@ -2793,8 +2793,8 @@ NAME = ""
 SERVER_PORT = 5080
 
 # =========== [ Security ] ===========
-# Auth Token
-AUTH_TOKEN = "secret-token"
+# Set a unique token in your local settings before enabling remote control.
+AUTH_TOKEN = ""
 
 # Warning: Enabling this allows remote clients to execute arbitrary JavaScript code on this machine, posing serious security risks
 ENABLE_EVAL = false
@@ -3032,7 +3032,8 @@ Custom syntax; use with caution."""
 
 [echarts]
 # =========== [ Basic ] ===========
-ENABLE = true
+# Enable only for trusted documents. Fences execute JavaScript.
+ENABLE = false
 NAME = ""
 HOTKEY = ""
 
@@ -3127,7 +3128,8 @@ option = {
 
 [chart]
 # =========== [ Basic ] ===========
-ENABLE = true
+# Enable only for trusted documents. Fences execute JavaScript.
+ENABLE = false
 NAME = ""
 HOTKEY = ""
 
@@ -3255,7 +3257,8 @@ TEMPLATE = '''
 
 [function_plot]
 # =========== [ Basic ] ===========
-ENABLE = true
+# Enable only for trusted documents. Fences execute JavaScript.
+ENABLE = false
 NAME = ""
 HOTKEY = ""
 
@@ -3354,7 +3357,8 @@ TEMPLATE = """
 
 [calendar]
 # =========== [ Basic ] ===========
-ENABLE = true
+# Enable only for trusted documents. Fences execute JavaScript.
+ENABLE = false
 NAME = ""
 HOTKEY = ""
 
@@ -3452,7 +3456,8 @@ G2 G2|A2 A2|B2 B2|c3 z|G2 G2|A2 A2|B2 G2|c3 z||"""
 
 [drawIO]
 # =========== [ Basic ] ===========
-ENABLE = true
+# Enable only for trusted documents. Fences execute JavaScript.
+ENABLE = false
 NAME = ""
 HOTKEY = ""
 
@@ -3638,7 +3643,7 @@ INTERACTIVE_MODE = true
 # =========== [ Core Config ] ===========
 # Marp Core Options: Option object passed to the underlying parsing library
 # See: https://github.com/marp-team/marp-core?tab=readme-ov-file#constructor-options
-MARP_CORE_OPTIONS = { html = true }
+MARP_CORE_OPTIONS = { html = false }
 
 # =========== [ Template ] ===========
 # Template: Default sample padding content when inserting a code block

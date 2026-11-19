@@ -8,9 +8,15 @@ class RemoteControlPlugin extends BasePlugin {
     config: "config",
   }
 
+  _hasAuthToken = token => typeof token === "string" && !!token.trim() && token !== "secret-token"
+
+  _validateToken = token => this._hasAuthToken(token) && token === this.config.AUTH_TOKEN
+
   prepare = async () => {
-    if (!window.__typoraPluginMacState) return
-    if (this.config.AUTH_TOKEN && this.config.AUTH_TOKEN !== "secret-token") return
+    if (this._hasAuthToken(this.config.AUTH_TOKEN)) return
+    if (!window.__typoraPluginMacState) {
+      throw new Error("Set remote_control.AUTH_TOKEN to a unique token before enabling remote control")
+    }
     const { randomBytes } = require("crypto")
     const token = randomBytes(32).toString("hex")
     const saved = await this.utils.settings.save(this.fixedName, { AUTH_TOKEN: token })
@@ -24,7 +30,7 @@ class RemoteControlPlugin extends BasePlugin {
     this.rpcServer = new RpcServer({ enableDiscovery: true })
     this.rpcServer
       .use(RpcServer.auth({
-        validator: (token) => token === this.config.AUTH_TOKEN,
+        validator: this._validateToken,
         bypass: [`${this.NAMESPACES.system}.authenticate`],
       }))
       .use(RpcServer.rateLimit({
@@ -44,11 +50,12 @@ class RemoteControlPlugin extends BasePlugin {
           }
           return true
         },
-        [this.NAMESPACES.plugin]: ({ params = [] }) => {
-          const [{ plugin, method } = {}] = params
-          const allowedMethods = this.config.ALLOWED_METHODS[plugin] || []
-          if (allowedMethods.length > 0 && !allowedMethods.includes(method)) {
-            throw new JSONRPCErrorException(`Method '${method}' not allowed for plugin '${plugin}'`, JSONRPCErrorCode.InvalidRequest, { typoraCode: "METHOD_NOT_ALLOWED" })
+        [`${this.NAMESPACES.plugin}.call`]: ({ params }) => {
+          const { plugin, method } = (Array.isArray(params) && params[0]) || {}
+          const methods = this.config.ALLOWED_METHODS || {}
+          const allowed = typeof plugin === "string" && Object.hasOwn(methods, plugin) && methods[plugin]
+          if (typeof method !== "string" || !Array.isArray(allowed) || !allowed.includes(method)) {
+            throw new JSONRPCErrorException("Plugin method is not allowed", JSONRPCErrorCode.InvalidRequest, { typoraCode: "METHOD_NOT_ALLOWED" })
           }
           return true
         },
@@ -68,7 +75,7 @@ class RemoteControlPlugin extends BasePlugin {
         }),
         authenticate: async (params = []) => {
           const [{ token } = {}] = params
-          if (token === this.config.AUTH_TOKEN) return { success: true, message: "Authenticated" }
+          if (this._validateToken(token)) return { success: true, message: "Authenticated" }
           throw new JSONRPCErrorException("Invalid token", JSONRPCErrorCode.InvalidRequest, { typoraCode: "AUTH_FAILED" })
         },
         exitTypora: async () => this.utils.exitTypora(),
@@ -140,17 +147,25 @@ class RemoteControlPlugin extends BasePlugin {
         },
         set: async (params = []) => {
           const [{ key, value } = {}] = params
+          if (typeof key !== "string" || !Object.hasOwn(this.config, key) || (key === "AUTH_TOKEN" && !this._hasAuthToken(value))) {
+            throw new JSONRPCErrorException("Invalid configuration setting", JSONRPCErrorCode.InvalidParams)
+          }
           this.config[key] = value
           return { success: true }
         },
       })
       .start(this.config.SERVER_PORT)
+      .catch(error => console.error("[RemoteControlPlugin] Could not start RPC server:", error))
   }
 
   _fixConfig = () => {
-    const rateLimit = this.config.RATE_LIMIT || {}
-    rateLimit.requestsPerMinute = Math.max(0, rateLimit.requestsPerMinute ?? 60)
-    rateLimit.burstSize = Math.max(0, rateLimit.burstSize ?? 10)
+    const rateLimit = this.config.RATE_LIMIT || (this.config.RATE_LIMIT = {})
+    const normalizeLimit = (value, fallback) => {
+      const limit = Number(value ?? fallback)
+      return Number.isFinite(limit) ? Math.max(0, limit) : fallback
+    }
+    rateLimit.requestsPerMinute = normalizeLimit(rateLimit.requestsPerMinute, 60)
+    rateLimit.burstSize = normalizeLimit(rateLimit.burstSize, 10)
     if (rateLimit.burstSize > rateLimit.requestsPerMinute) {
       console.warn("[RemoteControlPlugin] burstSize should not exceed requestsPerMinute")
       rateLimit.burstSize = rateLimit.requestsPerMinute

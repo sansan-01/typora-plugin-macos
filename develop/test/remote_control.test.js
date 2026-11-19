@@ -200,19 +200,18 @@ describe("RpcServer - rpc.discover", () => {
     assert.ok(body.result !== undefined)
   })
 
-  it("rpc.discover does NOT go through user middleware", async () => {
-    // rpc.discover is registered directly via _rpc.addMethod, not via registerNamespace,
-    // so _createHandler (and thus middleware) is never called for it
+  it("rpc.discover applies the authentication middleware", async () => {
     const { server, url } = await startServer({ enableDiscovery: true })
-    let middlewareCalled = false
-    server.use(() => {
-      middlewareCalled = true
-      return true
-    })
-    const { body } = await rpcRequest(url, "rpc.discover", [])
-    server.stop()
-    assert.ok(body.result !== undefined)
-    assert.strictEqual(middlewareCalled, false)
+    try {
+      const token = require("node:crypto").randomBytes(32).toString("hex")
+      server.use(RpcServer.auth({ validator: value => value === token }))
+      const unauthenticated = await rpcRequest(url, "rpc.discover", [])
+      const authenticated = await rpcRequest(url, "rpc.discover", [], { token })
+      assert.strictEqual(unauthenticated.body.error.data.typoraCode, "AUTH_FAILED")
+      assert.deepStrictEqual(authenticated.body.result, {})
+    } finally {
+      server.stop()
+    }
   })
 })
 

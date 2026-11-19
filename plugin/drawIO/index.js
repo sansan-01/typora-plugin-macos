@@ -116,9 +116,6 @@ class DrawIOPlugin extends BasePlugin {
 
   lazyLoad = async () => {
     await this.utils.insertScript(this.config.RESOURCE_URI)
-    if (typeof window.Graph?.sanitizeHtml === "function") {
-      window.Graph.sanitizeHtml = (html) => html
-    }
     window.GraphViewer.prototype.toolbarZIndex = 7
   }
 

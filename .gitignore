@@ -1,9 +1,16 @@
 .DS_Store
-/.idea
-/.vscode
+Thumbs.db
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
 /temp
-/develop/node_modules
+node_modules/
+coverage/
+npm-debug.log*
 /plugin/VERSION.json
+/plugin/global/settings/settings.user.toml
 /plugin/global/user_styles/*.css
 
 /.macos-runtime/

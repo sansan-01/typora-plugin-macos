@@ -26,6 +26,11 @@ const createCipher = getKey => {
 }
 
 class CipherPlugin extends BasePlugin {
+  prepare = () => {
+    const key = this.config.SECRET_KEY
+    if (typeof key !== "string" || !key.trim()) throw new Error("Set cipher.SECRET_KEY in your local settings before enabling encryption")
+  }
+
   cipher = createCipher(() => this.config.SECRET_KEY)
   showMessageBox = this.config.SHOW_HINT_DIALOG
   staticActions = [

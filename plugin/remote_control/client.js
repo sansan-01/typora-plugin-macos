@@ -34,10 +34,11 @@ class RpcClient {
       body: JSON.stringify(jsonRPCRequest),
       signal: this.timeout > 0 ? AbortSignal.timeout(this.timeout) : undefined,
     })
+    if (jsonRPCRequest.id === undefined) return
     if (response.ok) {
       const jsonRPCResponse = await response.json()
       this._rpc.receive(jsonRPCResponse)
-    } else if (jsonRPCRequest.id !== undefined) {
+    } else {
       const errorText = await response.text().catch(() => "Unknown Error")
       throw new Error(`[RpcClient] Transport Error: ${response.status} ${response.statusText} - ${errorText}`)
     }

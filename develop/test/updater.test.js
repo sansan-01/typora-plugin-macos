@@ -15,10 +15,12 @@ describe("Updater", () => {
     mock.method(console, "log", () => undefined)
     mock.method(console, "error", () => undefined)
 
+    const workspaceDir = `/tmp/typora-plugin-updater-${process.pid}`
+    Object.assign(updater.paths, { workspaceDir, workDir: `${workspaceDir}/work`, backupDir: `${workspaceDir}/backup` })
     updater.fs = {
       emptyDir: mock.fn(async () => undefined),
       remove: mock.fn(async () => undefined),
-      chmod: mock.fn(async () => undefined),
+      mkdtemp: mock.fn(async () => workspaceDir),
       readJson: mock.fn(async () => ({ tag_name: "1.0.0" })),
       outputJson: mock.fn(async () => undefined),
       readdir: mock.fn(async () => []),
@@ -73,34 +75,24 @@ describe("Updater", () => {
   })
 
   describe("prepare", () => {
-    it("should clean workspace and change permissions", async () => {
+    it("creates a fresh workspace for staging and backup", async () => {
       await updater.prepare()
-      assert.equal(updater.fs.emptyDir.mock.calls.length, 1)
-      assert.equal(updater.fs.remove.mock.calls.length, 1)
-      assert.equal(updater.fs.chmod.mock.calls.length, 1)
-      assert.deepEqual(updater.fs.chmod.mock.calls[0].arguments, ["/app/plugin/./plugin", 0o777])
+      assert.equal(updater.fs.mkdtemp.mock.calls.length, 1)
+      assert.deepEqual(updater.fs.ensureDir.mock.calls[0].arguments, [updater.paths.workDir])
+      assert.equal(updater.fs.remove.mock.calls.length, 0)
     })
   })
 
   describe("cleanup", () => {
-    it("should remove workDir and backupDir", async () => {
+    it("removes the workspace after a clean exit", async () => {
       await updater.cleanup()
-      assert.equal(updater.fs.remove.mock.calls.length, 2)
+      assert.deepEqual(updater.fs.remove.mock.calls[0].arguments, [updater.paths.workspaceDir])
     })
 
     it("should not throw if remove fails", async () => {
       updater.fs.remove = mock.fn(() => Promise.reject(new Error("Mock error")))
       await assert.doesNotReject(() => updater.cleanup())
       assert.ok(updater.fs.remove.mock.calls.length >= 1)
-    })
-  })
-
-  describe("chmod", () => {
-    it("should not throw if chmod fails", async () => {
-      updater.fs.chmod = mock.fn(async () => {
-        throw new Error("EPERM")
-      })
-      await assert.doesNotReject(() => updater.chmod("/path"))
     })
   })
 
@@ -425,6 +417,8 @@ describe("Updater", () => {
       })
 
       await assert.rejects(() => updater.atomicSync(), /Cannot empty target dir for rollback/)
+      await updater.cleanup()
+      assert.deepEqual(updater.fs.remove.mock.calls[0].arguments, [updater.paths.workDir])
     })
   })
 

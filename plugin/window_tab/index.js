@@ -996,9 +996,13 @@ class WindowTabPlugin extends BasePlugin {
   }
 
   _insertTabEl = (filePath, showName, idx) => {
-    const hint = this.config.SHOW_FULL_PATH_ON_HOVER ? `ty-hint="${filePath}"` : ""
     const btn = this.config.SHOW_TAB_CLOSE_BUTTON ? `<div class="close-button"><div class="close-icon"></div></div>` : ""
-    this.entities.tabWrapper.insertAdjacentHTML("beforeend", `<div class="tab-container" data-idx="${idx}" draggable="true" ${hint}><div class="tab-name">${showName}</div>${btn}</div>`)
+    const tab = document.createElement("div")
+    tab.className = "tab-container"
+    tab.draggable = true
+    tab.innerHTML = `<div class="tab-name"></div>${btn}`
+    this._updateTabEl(tab, filePath, showName, idx)
+    this.entities.tabWrapper.appendChild(tab)
   }
 
   _updateTabEl = (tabEl, filePath, showName, idx) => {

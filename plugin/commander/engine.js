@@ -200,7 +200,7 @@ const _getGitBashPath = (() => {
       .filter(dir => dir.toLowerCase().includes("git"))
       .flatMap(dir => [path.join(dir, "bash.exe"), path.join(dir, "..", "bin", "bash.exe")])
     const foundPath = [...basePaths, ...userProfilePaths, ...envPaths].find(p => fs.existsSync(p))
-    cachedPath = foundPath ? `"${foundPath}"` : ""
+    cachedPath = foundPath || ""
     return cachedPath
   }
 })()
@@ -214,7 +214,7 @@ register({
     getSpawnConfig: ({ env, rawCwd }) => ({
       command: _getGitBashPath(ctx) || "bash.exe",
       args: [],
-      options: { cwd: rawCwd, env, shell: true },
+      options: { cwd: rawCwd, env, shell: false },
     }),
   }),
 })

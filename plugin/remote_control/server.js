@@ -1,6 +1,8 @@
 const http = require("http")
 const { JSONRPCServer, JSONRPCErrorCode, JSONRPCErrorException } = require("./json-rpc-2.0.min.js")
 
+const MAX_BODY_BYTES = 1024 * 1024
+
 class TokenBucketLimiter {
   cache = new Map()
   lastGcTime = Date.now()
@@ -39,7 +41,7 @@ class RpcServer {
 
   constructor({ enableDiscovery = true } = {}) {
     if (enableDiscovery) {
-      this._rpc.addMethod("rpc.discover", () => this.getRegisteredMethods())
+      this._rpc.addMethod("rpc.discover", this._createHandler(() => this.getRegisteredMethods(), "rpc", "discover"))
     }
   }
 
@@ -106,9 +108,15 @@ class RpcServer {
   }
 
   start(port = 3000) {
-    this._server = http.createServer((req, res) => this._handleRequest(req, res))
+    if (typeof port === "string" && /^\d+$/.test(port)) port = Number(port)
+    if (!Number.isInteger(port) || port < 0 || port > 65535) {
+      return Promise.reject(new RangeError("Invalid RPC port"))
+    }
+    const server = this._server = http.createServer((req, res) => this._handleRequest(req, res))
     return new Promise((resolve, reject) => {
-      this._server.listen(port, "127.0.0.1", (err) => {
+      server.once?.("error", reject)
+      server.listen(port, "127.0.0.1", (err) => {
+        server.removeListener?.("error", reject)
         if (err) return reject(err)
         console.log(`[RpcServer] System online. Listening on 127.0.0.1:${port}`)
         resolve(this)
@@ -145,6 +153,7 @@ class RpcServer {
     }
     try {
       const body = await this._readRequestBody(req)
+      if (body === null) return this._sendResponse(res, 413, "Request body too large")
       const jsonRequest = JSON.parse(body)
       const context = {
         req,
@@ -159,6 +168,7 @@ class RpcServer {
         this._sendResponse(res, 204)
       }
     } catch (error) {
+      if (res.destroyed) return
       const isParseError = error instanceof SyntaxError
       const errorResponse = {
         jsonrpc: "2.0",
@@ -174,15 +184,29 @@ class RpcServer {
   }
 
   async _readRequestBody(req) {
+    if (Number(req.headers["content-length"]) > MAX_BODY_BYTES) return null
     const chunks = []
-    for await (const chunk of req) {
-      chunks.push(chunk)
+    let size = 0
+    // Leave the stream open on overflow so the server can send a 413 before closing the connection.
+    const iterator = req[Symbol.asyncIterator]()
+    const deadline = typeof req.destroy === "function" ? setTimeout(() => req.destroy(), 15000) : undefined
+    try {
+      while (true) {
+        const { value, done } = await iterator.next()
+        if (done) return Buffer.concat(chunks, size).toString("utf8")
+        size += value.length
+        if (size > MAX_BODY_BYTES) return null
+        chunks.push(value)
+      }
+    } finally {
+      clearTimeout(deadline)
     }
-    return Buffer.concat(chunks).toString("utf8")
   }
 
   _sendResponse(res, statusCode, payload = "", contentType = "text/plain") {
-    res.writeHead(statusCode, payload ? { "Content-Type": contentType } : {})
+    const headers = payload ? { "Content-Type": contentType } : {}
+    if (statusCode === 413) headers.Connection = "close"
+    res.writeHead(statusCode, headers)
     res.end(payload)
   }
 }
